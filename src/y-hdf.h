@@ -24,8 +24,8 @@
 
 #include <hdf5.h>
 #include <hdf5_hl.h>
-#include <y-data-class.h>
-#include <y-data-simple.h>
+#include <data/y-data-class.h>
+#include <data/y-data-simple.h>
 
 G_BEGIN_DECLS
 

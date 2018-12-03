@@ -26,7 +26,7 @@
 #define Y_OP_H
 
 #include <gio/gio.h>
-#include <y-data-class.h>
+#include <data/y-data-class.h>
 
 G_BEGIN_DECLS
 

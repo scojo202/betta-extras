@@ -23,7 +23,7 @@
 #define Y_VECTOR_RING_H
 
 #include <glib-object.h>
-#include <y-data-class.h>
+#include <data/y-data-class.h>
 
 G_BEGIN_DECLS
 

@@ -22,7 +22,7 @@
 #ifndef DATA_VECTOR_SUBSET_H
 #define DATA_VECTOR_SUBSET_H
 
-#include <y-data-class.h>
+#include <data/y-data-class.h>
 #include <y-operation.h>
 
 G_BEGIN_DECLS

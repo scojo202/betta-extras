@@ -21,7 +21,7 @@
 
 #include <string.h>
 #include <y-operation.h>
-#include <y-data-simple.h>
+#include <data/y-data-simple.h>
 
 /**
  * SECTION: y-operation

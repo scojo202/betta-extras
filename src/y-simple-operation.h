@@ -22,7 +22,7 @@
 #ifndef OP_SIMPLE_H
 #define OP_SIMPLE_H
 
-#include <y-data-class.h>
+#include <data/y-data-class.h>
 #include <y-operation.h>
 
 G_BEGIN_DECLS
