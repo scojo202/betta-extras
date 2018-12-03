@@ -1,0 +1,16 @@
+YData is a set of array GObjects. It currently supports scalar, vector, and 2-d arrays.
+
+Data types:
+- simple array types - double precision by default
+- structure that maps onto an HDF5 group
+
+Functionality:
+- 'changed' signal
+- data that depends on other data, updating automatically via signal
+- output to ASCII, HDF5
+- cached min/max
+- GObject introspection
+
+TODO:
+- finalize operation object
+- integer array types

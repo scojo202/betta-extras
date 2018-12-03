@@ -1,0 +1,6 @@
+GObject wrapper for arrays - just a "changed" signal and some convenience code
+
+Based mostly on code from GOffice (git.gnome.org/goffice)
+
+This is work in progress
+
