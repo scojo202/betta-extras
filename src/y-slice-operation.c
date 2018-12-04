@@ -144,6 +144,7 @@ int slice_size(YOperation * op, YData * input, unsigned int *dims)
 
 typedef struct {
 	YSliceOperation sop;
+	GType input_type;
 	double *input;
 	YMatrixSize size;
 	double *output;
@@ -168,6 +169,7 @@ gpointer vector_slice_op_create_data(YOperation * op, gpointer data,
 	d->sop = *sop;
 	if (Y_IS_VECTOR(input)) {
 		YVector *vec = Y_VECTOR(input);
+		d->input_type = Y_TYPE_VECTOR;
 		d->input =
 		    y_create_input_array_from_vector(vec, neu, d->size.columns,
 						     d->input);
@@ -182,6 +184,7 @@ gpointer vector_slice_op_create_data(YOperation * op, gpointer data,
 		return d;
 	}
 	YMatrix *mat = Y_MATRIX(input);
+	d->input_type = Y_TYPE_MATRIX;
 	d->input =
 	    y_create_input_array_from_matrix(mat, neu, d->size, d->input);
 	d->size = y_matrix_get_size(mat);
@@ -219,7 +222,7 @@ gpointer vector_slice_op(gpointer input)
 
 	double *v = d->output;
 
-	if (d->size.rows==0) {	/* output will be scalar */
+	if (d->input_type == Y_TYPE_VECTOR) {	/* output will be scalar */
 		if (d->sop.type == SLICE_ELEMENT) {
 			*v = m[d->sop.index];
 		} else if (d->sop.type == SLICE_SUMELEMENTS) {
