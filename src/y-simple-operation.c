@@ -75,10 +75,12 @@ gpointer simple_op_create_data(YOperation * op, gpointer data,
 	d->sop = *sop;
 	if(Y_IS_SCALAR(input)) {
 		YScalar *sca = Y_SCALAR(input);
-		d->input = g_malloc(sizeof(double));
+		if(neu) {
+		    d->input = g_malloc(sizeof(double));
+		    d->len = 1;
+		    d->output = g_malloc(sizeof(double));
+		}
 		*d->input = y_scalar_get_value(sca);
-		d->len = 1;
-		d->output = g_malloc(sizeof(double));
 	}
 	else if(Y_IS_VECTOR(input)) {
 		YVector *vec = Y_VECTOR(input);

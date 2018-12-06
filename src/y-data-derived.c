@@ -506,7 +506,8 @@ y_derived_vector_set_property(GObject * object,
 		if(d->input != NULL) {
 		  g_object_unref(d->input);
 		}
-		d->input = g_value_dup_object(value);
+		d->input = g_value_get_object(value);
+		g_object_ref_sink(d->input);
 		d->handler = g_signal_connect(d->input, "changed",
 				 G_CALLBACK(on_input_changed_after), v);
 		y_data_emit_changed(Y_DATA(v));
@@ -680,8 +681,6 @@ static double *derived_matrix_load_values(YMatrix * vec)
 
 	YMatrixSize size = y_matrix_get_size(vec);
 
-	//g_message("load values, len is %u",len);
-
 	if (vecs->currsize.rows != size.rows
 	    || vecs->currsize.columns != size.columns) {
 		if (vecs->cache)
@@ -780,6 +779,7 @@ y_derived_matrix_set_property(GObject * object,
 		break;
 	case PROP_INPUT:
 		d->input = g_value_get_object(value);
+		d->input = g_object_ref_sink(d->input);
 		g_signal_connect(d->input, "changed",
 				 G_CALLBACK(on_input_changed_after2), v);
 		y_data_emit_changed(Y_DATA(v));

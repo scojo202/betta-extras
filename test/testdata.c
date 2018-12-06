@@ -1,4 +1,5 @@
 #include <math.h>
+#include <fftw3.h>
 #include <y-extras.h>
 
 static void
@@ -12,7 +13,8 @@ test_range_vectors(void)
   for(i=0;i<10;i++) {
     g_assert_cmpfloat(0.0+1.0*i, ==, y_vector_get_value(Y_VECTOR(r),i));
   }
-  g_assert_cmpstr(y_vector_get_str(Y_VECTOR(r),8,"%1.1f"),==,"8.0");
+  g_autofree gchar *str = y_vector_get_str(Y_VECTOR(r),8,"%1.1f");
+  g_assert_cmpstr(str,==,"8.0");
   g_assert_true(y_vector_is_varying_uniformly(Y_VECTOR(r)));
   double mn, mx;
   y_vector_get_minmax(Y_VECTOR(r),&mn,&mx);
@@ -248,5 +250,7 @@ main (int argc, char *argv[])
   g_test_add_func("/YData/derived/vector/slice",test_derived_vector_slice);
   g_test_add_func("/YData/derived/matrix/simple",test_derived_matrix_simple);
   g_test_add_func("/YData/derived/matrix/subset",test_derived_matrix_subset);
-  return g_test_run();
+  int retval = g_test_run();
+  fftw_cleanup();
+  return retval;
 }
