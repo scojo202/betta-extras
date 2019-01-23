@@ -1,11 +1,11 @@
-project('y-extras','c', version: '0.0.1', default_options: [
+project('b-extras','c', version: '0.0.1', default_options: [
                      'c_std=gnu11'])
 
 gnome = import('gnome')
 
 libgio_dep = dependency('gio-2.0', version: '>= 2.52')
 libgobj_dep = dependency('gobject-2.0', version: '>= 2.52')
-yplot_dep = dependency('y-plot-0.2', version: '>= 0.1')
+libbetta_dep = dependency('libbetta-0.2', version: '>= 0.1.3')
 fftw_dep = dependency('fftw3', version: '>=3.2')
 
 comp = meson.get_compiler('c')
@@ -13,7 +13,7 @@ libm = comp.find_library('m', required: false)
 hdf5 = [comp.find_library('hdf5_hl', required: true),comp.find_library('hdf5', required: true)]
 
 conf = configuration_data()
-conf.set_quoted('PACKAGE_NAME', 'y-extras')
+conf.set_quoted('PACKAGE_NAME', 'b-extras')
 
 add_project_arguments('-Wall', language : 'c')
 

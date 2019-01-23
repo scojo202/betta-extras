@@ -1,5 +1,5 @@
 /*
- * y-fft-operation.c :
+ * b-fft-operation.c :
  *
  * Copyright (C) 2017 Scott O. Johnson (scojo202@gmail.com)
  *
@@ -25,10 +25,10 @@
 #ifndef __GI_SCANNER__
 #include <fftw3.h>
 #endif
-#include "y-fft-operation.h"
+#include "b-fft-operation.h"
 
 /**
- * SECTION: y-fft-operation
+ * SECTION: b-fft-operation
  * @short_description: Operations that take the Fourier transform of input.
  *
  * These operations take the Fourier transform of the input and output the magnitude and phase of the spectrum.
@@ -41,18 +41,18 @@ enum {
 	FFT_PROP_TYPE
 };
 
-struct _YFFTOperation {
-	YOperation base;
+struct _BFFTOperation {
+	BOperation base;
 	guchar type;
 };
 
-G_DEFINE_TYPE(YFFTOperation, y_fft_operation, Y_TYPE_OPERATION);
+G_DEFINE_TYPE(BFFTOperation, b_fft_operation, B_TYPE_OPERATION);
 
 static void
-y_fft_operation_set_property(GObject * gobject, guint param_id,
+fft_operation_set_property(GObject * gobject, guint param_id,
 			     GValue const *value, GParamSpec * pspec)
 {
-	YFFTOperation *sop = Y_FFT_OPERATION(gobject);
+	BFFTOperation *sop = B_FFT_OPERATION(gobject);
 
 	switch (param_id) {
 	case FFT_PROP_TYPE:
@@ -65,10 +65,10 @@ y_fft_operation_set_property(GObject * gobject, guint param_id,
 }
 
 static void
-y_fft_operation_get_property(GObject * gobject, guint param_id,
+fft_operation_get_property(GObject * gobject, guint param_id,
 			     GValue * value, GParamSpec * pspec)
 {
-	YFFTOperation *sop = Y_FFT_OPERATION(gobject);
+	BFFTOperation *sop = B_FFT_OPERATION(gobject);
 
 	switch (param_id) {
 	case FFT_PROP_TYPE:
@@ -82,19 +82,19 @@ y_fft_operation_get_property(GObject * gobject, guint param_id,
 }
 
 static
-int vector_fft_size(YOperation * op, YData * input, unsigned int *dims)
+int vector_fft_size(BOperation * op, BData * input, unsigned int *dims)
 {
 	int n_dims;
-	g_assert(Y_IS_VECTOR(input));
+	g_assert(B_IS_VECTOR(input));
 	g_assert(dims);
-	YVector *mat = Y_VECTOR(input);
-	dims[0] = y_vector_get_len(mat) / 2 + 1;
+	BVector *mat = B_VECTOR(input);
+	dims[0] = b_vector_get_len(mat) / 2 + 1;
 	n_dims = 1;
 	return n_dims;
 }
 
 typedef struct {
-	YFFTOperation sop;
+	BFFTOperation sop;
 	double *input;
 	unsigned int len;
 	fftw_complex *inter;
@@ -104,8 +104,8 @@ typedef struct {
 } FFTOpData;
 
 static
-gpointer vector_fft_op_create_data(YOperation * op, gpointer data,
-				   YData * input)
+gpointer vector_fft_op_create_data(BOperation * op, gpointer data,
+				   BData * input)
 {
 	if (input == NULL)
 		return NULL;
@@ -118,12 +118,12 @@ gpointer vector_fft_op_create_data(YOperation * op, gpointer data,
 		neu = FALSE;
 		d = (FFTOpData *) data;
 	}
-	YFFTOperation *sop = Y_FFT_OPERATION(op);
+	BFFTOperation *sop = B_FFT_OPERATION(op);
 	d->sop = *sop;
-	YVector *vec = Y_VECTOR(input);
+	BVector *vec = B_VECTOR(input);
 	unsigned int old_len = d->len;
-	d->input = y_create_input_array_from_vector(vec, neu, d->len, d->input);
-	d->len = y_vector_get_len(vec);
+	d->input = b_create_input_array_from_vector(vec, neu, d->len, d->input);
+	d->len = b_vector_get_len(vec);
 	if (d->len == 0)
 		return NULL;
 	if (!neu) {
@@ -153,7 +153,7 @@ gpointer vector_fft_op_create_data(YOperation * op, gpointer data,
 					 FFTW_ESTIMATE);
 	}
 	memset(d->inter, 0, sizeof(fftw_complex) * d->out_len);
-	memcpy(d->input, y_vector_get_values(vec), d->len * sizeof(double));
+	memcpy(d->input, b_vector_get_values(vec), d->len * sizeof(double));
 	return d;
 }
 
@@ -196,12 +196,12 @@ gpointer vector_fft_op(gpointer input)
 	return d->output;
 }
 
-static void y_fft_operation_class_init(YFFTOperationClass * slice_klass)
+static void b_fft_operation_class_init(BFFTOperationClass * slice_klass)
 {
 	GObjectClass *gobject_klass = (GObjectClass *) slice_klass;
-	gobject_klass->set_property = y_fft_operation_set_property;
-	gobject_klass->get_property = y_fft_operation_get_property;
-	YOperationClass *op_klass = (YOperationClass *) slice_klass;
+	gobject_klass->set_property = fft_operation_set_property;
+	gobject_klass->get_property = fft_operation_get_property;
+	BOperationClass *op_klass = (BOperationClass *) slice_klass;
 	op_klass->thread_safe = FALSE;
 	op_klass->op_size = vector_fft_size;
 	op_klass->op_func = vector_fft_op;
@@ -216,23 +216,23 @@ static void y_fft_operation_class_init(YFFTOperationClass * slice_klass)
 							 G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
-static void y_fft_operation_init(YFFTOperation * fft)
+static void b_fft_operation_init(BFFTOperation * fft)
 {
-	g_assert(Y_IS_FFT_OPERATION(fft));
+	g_assert(B_IS_FFT_OPERATION(fft));
 	fft->type = FFT_MAG;
 }
 
 /**
- * y_fft_operation_new:
+ * b_fft_operation_new:
  * @type: the type of operation
  *
  * Create a new FFT operation.
  *
- * Returns: a #YOperation
+ * Returns: a #BOperation
  **/
-YOperation *y_fft_operation_new(int type)
+BOperation *b_fft_operation_new(int type)
 {
-	YOperation *o = g_object_new(Y_TYPE_FFT_OPERATION, "type", type, NULL);
+	BOperation *o = g_object_new(B_TYPE_FFT_OPERATION, "type", type, NULL);
 
 	return o;
 }

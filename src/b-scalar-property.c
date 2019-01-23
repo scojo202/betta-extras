@@ -1,46 +1,46 @@
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
-#include <y-scalar-property.h>
+#include <b-scalar-property.h>
 
 /**
- * SECTION: y-scalar-property
+ * SECTION: b-scalar-property
  * @short_description: A scalar data object that reflects the value of a GObject property.
  *
- * Data classes #YPropertyScalar
+ * Data classes #BPropertyScalar
  *
  */
 
 /**
- * YPropertyScalar:
+ * BPropertyScalar:
  *
- * YScalar that changes when a property changes.
+ * BScalar that changes when a GObject property changes.
  **/
 
-struct _YPropertyScalar {
-	YScalar base;
+struct _BPropertyScalar {
+	BScalar base;
 	GObject *obj;
 	gchar *name;
 };
 
-G_DEFINE_TYPE (YPropertyScalar, y_property_scalar, Y_TYPE_SCALAR);
+G_DEFINE_TYPE (BPropertyScalar, b_property_scalar, B_TYPE_SCALAR);
 
 static void
-y_property_scalar_finalize (GObject *obj)
+property_scalar_finalize (GObject *obj)
 {
-	YPropertyScalar *s = (YPropertyScalar *)obj;
+	BPropertyScalar *s = (BPropertyScalar *)obj;
 	g_signal_handlers_disconnect_by_data(s->obj,s);
 	g_object_unref(s->obj);
 	g_free(s->name);
 
-	GObjectClass *obj_class = G_OBJECT_CLASS(y_property_scalar_parent_class);
+	GObjectClass *obj_class = G_OBJECT_CLASS(b_property_scalar_parent_class);
 	(*obj_class->finalize) (obj);
 }
 
 static double
-y_property_scalar_get_value (YScalar *dat)
+property_scalar_get_value (BScalar *dat)
 {
-	YPropertyScalar const *ps = (YPropertyScalar const *)dat;
+	BPropertyScalar const *ps = (BPropertyScalar const *)dat;
 	g_return_val_if_fail(ps->obj,NAN);
 	GObjectClass *klass = G_OBJECT_GET_CLASS(ps->obj);
 	GParamSpec *spec = g_object_class_find_property(klass,ps->name);
@@ -67,18 +67,16 @@ y_property_scalar_get_value (YScalar *dat)
 }
 
 static void
-y_property_scalar_class_init (YPropertyScalarClass *klass)
+b_property_scalar_class_init (BPropertyScalarClass *klass)
 {
 	GObjectClass *gobject_klass = (GObjectClass *) klass;
-	gobject_klass->finalize = y_property_scalar_finalize;
-	//YDataClass *ydata_klass = (YDataClass *) klass;
-	YScalarClass *scalar_klass = (YScalarClass *) klass;
-	//ydata_klass->dup  = y_property_scalar_dup;
-	scalar_klass->get_value  = y_property_scalar_get_value;
+	gobject_klass->finalize = property_scalar_finalize;
+	BScalarClass *scalar_klass = (BScalarClass *) klass;
+	scalar_klass->get_value  = property_scalar_get_value;
 }
 
 static void
-y_property_scalar_init(YPropertyScalar *val)
+b_property_scalar_init(BPropertyScalar *val)
 {}
 
 static
@@ -86,20 +84,20 @@ void on_notify (GObject    *gobject,
                                                         GParamSpec *pspec,
                                                         gpointer    user_data)
 {
-	YData *d = Y_DATA(user_data);
-	y_data_emit_changed(d);
+	BData *d = B_DATA(user_data);
+	b_data_emit_changed(d);
 }
 
 /**
- * y_property_scalar_new:
+ * b_property_scalar_new:
  * @obj: a GObject
  * @name: the property name
  *
- * Creates a new #YPropertyScalar object. The property must be numeric.
+ * Creates a new #BPropertyScalar object. The property must be numeric.
  *
  * Returns: (transfer full): The new object.
  **/
-YPropertyScalar	*y_property_scalar_new (GObject *obj, const gchar *name)
+BPropertyScalar	*b_property_scalar_new (GObject *obj, const gchar *name)
 {
 	/* check that there is a property with this name */
 	GObjectClass *class = G_OBJECT_GET_CLASS(obj);
@@ -109,7 +107,7 @@ YPropertyScalar	*y_property_scalar_new (GObject *obj, const gchar *name)
 	GType type = G_PARAM_SPEC_VALUE_TYPE(spec);
 	g_return_val_if_fail(type==G_TYPE_DOUBLE || type==G_TYPE_FLOAT || type==G_TYPE_INT || type==G_TYPE_UINT,NULL);
 
-	YPropertyScalar *p = g_object_new(Y_TYPE_PROPERTY_SCALAR,NULL);
+	BPropertyScalar *p = g_object_new(B_TYPE_PROPERTY_SCALAR,NULL);
 	p->obj = g_object_ref(obj);
 	p->name = g_strdup(name);
 	/* connect to notify signal and emit changed */

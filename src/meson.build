@@ -1,55 +1,55 @@
-src_header_subdir = join_paths('y-extras','src')
+src_header_subdir = join_paths('b-extras','src')
 
 src_public_headers = []
 src_public_sources = []
 
 src_public_headers += [
-  'y-extras.h',
-  'y-linear-range.h',
-  'y-scalar-property.h',
-  'y-vector-ring.h',
-  'y-data-derived.h',
-  'y-operation.h',
-  'y-slice-operation.h',
-  'y-hdf.h',
-  'y-fft-operation.h',
-  'y-simple-operation.h',
-  'y-subset-operation.h'
+  'b-extras.h',
+  'b-linear-range.h',
+  'b-scalar-property.h',
+  'b-vector-ring.h',
+  'b-data-derived.h',
+  'b-operation.h',
+  'b-slice-operation.h',
+  'b-hdf.h',
+  'b-fft-operation.h',
+  'b-simple-operation.h',
+  'b-subset-operation.h'
 ]
 
 src_public_sources += [
-  'y-linear-range.c',
-  'y-scalar-property.c',
-  'y-vector-ring.c',
-  'y-data-derived.c',
-  'y-operation.c',
-  'y-slice-operation.c',
-  'y-hdf.c',
-  'y-fft-operation.c',
-  'y-simple-operation.c',
-  'y-subset-operation.c'
+  'b-linear-range.c',
+  'b-scalar-property.c',
+  'b-vector-ring.c',
+  'b-data-derived.c',
+  'b-operation.c',
+  'b-slice-operation.c',
+  'b-hdf.c',
+  'b-fft-operation.c',
+  'b-simple-operation.c',
+  'b-subset-operation.c'
 ]
 
-install_headers(src_public_headers,subdir: 'libyextras-0.0')
+install_headers(src_public_headers,subdir: 'libbextras-0.2')
 
-yextras_deps = [libgobj_dep, libgio_dep, yplot_dep, fftw_dep, libm, hdf5]
+bextras_deps = [libgobj_dep, libgio_dep, libbetta_dep, fftw_dep, libm, hdf5]
 
-libyextras = shared_library('yextras-0.0',src_public_sources, dependencies: yextras_deps, install: true, install_dir: get_option('libdir'))
+libbextras = shared_library('bextras-0.2',src_public_sources, dependencies: bextras_deps, install: true, install_dir: get_option('libdir'))
 
-libyextras_dep = declare_dependency(dependencies: yextras_deps, link_with: libyextras, include_directories: include_directories('.'),)
+libbextras_dep = declare_dependency(dependencies: bextras_deps, link_with: libbextras, include_directories: include_directories('.'),)
 
-yextras_dep_sources = []
+bextras_dep_sources = []
 
 pkgg = import('pkgconfig')
 
 pkgg.generate(
-    libraries: [libyextras],
-      subdirs: [ 'libyextras-0.0'.format(meson.project_version()) ],
+    libraries: [libbextras],
+      subdirs: [ 'libbextras-0.2'.format(meson.project_version()) ],
       version: meson.project_version(),
-         name: 'y-extras',
-     filebase: 'y-extras-0.0',
-  description: 'YExtras',
-     requires: [ 'glib-2.0', 'gobject-2.0', 'gio-2.0', 'y-plot-0.2', 'fftw3'],
+         name: 'b-extras',
+     filebase: 'b-extras-0.2',
+  description: 'BExtras',
+     requires: [ 'glib-2.0', 'gobject-2.0', 'gio-2.0', 'libbetta-0.2', 'fftw3'],
   install_dir: join_paths(get_option('libdir'), 'pkgconfig'),
 )
 
@@ -60,15 +60,15 @@ if build_gir
     '--warn-all',
   ]
 
-  yextras_gir = gnome.generate_gir(libyextras,
+  bextras_gir = gnome.generate_gir(libbextras,
                                     sources: src_public_headers + src_public_sources,
-                                    namespace: 'YExtras',
-                                    nsversion: '0.0',
-                                    identifier_prefix: 'Y',
-                                    symbol_prefix: 'y',
-                                    export_packages: 'yextras',
+                                    namespace: 'BExtras',
+                                    nsversion: '0.2',
+                                    identifier_prefix: 'B',
+                                    symbol_prefix: 'b',
+                                    export_packages: 'bextras',
                                     includes: [ 'GObject-2.0', 'Gio-2.0' ],
                                     install: true,
                                     extra_args: gir_extra_args)
-  yextras_dep_sources += yextras_gir
+  bextras_dep_sources += bextras_gir
 endif

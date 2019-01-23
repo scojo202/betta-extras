@@ -1,7 +1,7 @@
 /*
- * y-data-vector-slice.h :
+ * y-fft-operation.h :
  *
- * Copyright (C) 2016 Scott O. Johnson (scojo202@gmail.com)
+ * Copyright (C) 2017 Scott O. Johnson (scojo202@gmail.com)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -19,32 +19,24 @@
  * USA
  */
 
-#ifndef DATA_VECTOR_SLICE_H
-#define DATA_VECTOR_SLICE_H
+#ifndef OP_FFT_H
+#define OP_FFT_H
 
-#include <data/y-data-class.h>
-#include <y-operation.h>
+#include <data/b-data-class.h>
+#include <b-operation.h>
 
 G_BEGIN_DECLS
 
-G_DECLARE_FINAL_TYPE(YSliceOperation,y_slice_operation,Y,SLICE_OPERATION,YOperation)
+G_DECLARE_FINAL_TYPE(BFFTOperation,b_fft_operation,B,FFT_OPERATION,BOperation)
 
-#define Y_TYPE_SLICE_OPERATION  (y_slice_operation_get_type ())
+#define B_TYPE_FFT_OPERATION  (b_fft_operation_get_type ())
 
 enum {
-	SLICE_ROW = 0,
-	SLICE_COL = 1,
-	SLICE_SUMROWS = 2,
-	SLICE_SUMCOLS = 3
+	FFT_MAG = 0,
+	FFT_PHASE
 };
 
-#define SLICE_ELEMENT SLICE_ROW
-#define SLICE_SUMELEMENTS SLICE_SUMROWS
-
-YOperation *y_slice_operation_new (int type, int index, int width);
-void y_slice_operation_set_pars(YSliceOperation *d, int type, int index,
-                                 int width);
-
+BOperation *b_fft_operation_new (int type);
 
 G_END_DECLS
 

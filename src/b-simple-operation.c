@@ -1,5 +1,5 @@
 /*
- * y-simple-operation.c :
+ * b-simple-operation.c :
  *
  * Copyright (C) 2017 Scott O. Johnson (scojo202@gmail.com)
  *
@@ -21,10 +21,10 @@
 
 #include <memory.h>
 #include <math.h>
-#include "y-simple-operation.h"
+#include "b-simple-operation.h"
 
 /**
- * SECTION: y-simple-operation
+ * SECTION: b-simple-operation
  * @short_description: Operations that apply a function to every element of a vector or matrix.
  *
  * This operation applies a function to every element of an array. The output will be the same size as the input.
@@ -32,34 +32,34 @@
  *
  */
 
-struct _YSimpleOperation {
-	YOperation base;
-	YDoubleToDouble func;
+struct _BSimpleOperation {
+	BOperation base;
+	BDoubleToDouble func;
 };
 
-G_DEFINE_TYPE(YSimpleOperation, y_simple_operation, Y_TYPE_OPERATION);
+G_DEFINE_TYPE(BSimpleOperation, b_simple_operation, B_TYPE_OPERATION);
 
 static
-int simple_size(YOperation * op, YData * input, unsigned int *dims)
+int simple_size(BOperation * op, BData * input, unsigned int *dims)
 {
 	g_assert(dims);
 	/* output is the same size as input */
-	YDataClass *data_class = Y_DATA_GET_CLASS(input);
+	BDataClass *data_class = B_DATA_GET_CLASS(input);
 	char n_dims = data_class->get_sizes (input, dims);
 	return (int) n_dims;
 }
 
 typedef struct {
-	YSimpleOperation sop;
+	BSimpleOperation sop;
 	double *input;
 	unsigned int len;
-	YMatrixSize size;
+	BMatrixSize size;
 	double *output;
 } SimpleOpData;
 
 static
-gpointer simple_op_create_data(YOperation * op, gpointer data,
-				      YData * input)
+gpointer simple_op_create_data(BOperation * op, gpointer data,
+				      BData * input)
 {
 	if (input == NULL)
 		return NULL;
@@ -71,22 +71,22 @@ gpointer simple_op_create_data(YOperation * op, gpointer data,
 		neu = FALSE;
 		d = (SimpleOpData *) data;
 	}
-	YSimpleOperation *sop = Y_SIMPLE_OPERATION(op);
+	BSimpleOperation *sop = B_SIMPLE_OPERATION(op);
 	d->sop = *sop;
-	if(Y_IS_SCALAR(input)) {
-		YScalar *sca = Y_SCALAR(input);
+	if(B_IS_SCALAR(input)) {
+		BScalar *sca = B_SCALAR(input);
 		if(neu) {
 		    d->input = g_malloc(sizeof(double));
 		    d->len = 1;
 		    d->output = g_malloc(sizeof(double));
 		}
-		*d->input = y_scalar_get_value(sca);
+		*d->input = b_scalar_get_value(sca);
 	}
-	else if(Y_IS_VECTOR(input)) {
-		YVector *vec = Y_VECTOR(input);
+	else if(B_IS_VECTOR(input)) {
+		BVector *vec = B_VECTOR(input);
 		unsigned int old_len = d->len;
-		d->input = y_create_input_array_from_vector(vec, neu, d->len, d->input);
-		d->len = y_vector_get_len(vec);
+		d->input = b_create_input_array_from_vector(vec, neu, d->len, d->input);
+		d->len = b_vector_get_len(vec);
 		if (d->len == 0)
 			return NULL;
 		unsigned int dims[3];
@@ -98,13 +98,13 @@ gpointer simple_op_create_data(YOperation * op, gpointer data,
 		}
 		g_assert(d->input);
 		g_assert(d->len > 0);
-		memcpy(d->input, y_vector_get_values(vec), d->len * sizeof(double));
+		memcpy(d->input, b_vector_get_values(vec), d->len * sizeof(double));
 	}
-	else if(Y_IS_MATRIX(input)) {
-		YMatrix *mat = Y_MATRIX(input);
-		YMatrixSize old_size = d->size;
-		d->input = y_create_input_array_from_matrix(mat, neu, d->size, d->input);
-		d->size = y_matrix_get_size(mat);
+	else if(B_IS_MATRIX(input)) {
+		BMatrix *mat = B_MATRIX(input);
+		BMatrixSize old_size = d->size;
+		d->input = b_create_input_array_from_matrix(mat, neu, d->size, d->input);
+		d->size = b_matrix_get_size(mat);
 		if (d->size.rows == 0 || d->size.columns == 0)
 			return NULL;
 		unsigned int dims[3];
@@ -117,7 +117,7 @@ gpointer simple_op_create_data(YOperation * op, gpointer data,
 		d->len = d->size.rows*d->size.columns;
 		g_assert(d->input);
 		g_assert(d->size.rows*d->size.columns > 0);
-		memcpy(d->input, y_matrix_get_values(mat), d->size.rows*d->size.columns * sizeof(double));
+		memcpy(d->input, b_matrix_get_values(mat), d->size.rows*d->size.columns * sizeof(double));
 	}
 	return d;
 }
@@ -147,9 +147,9 @@ gpointer simple_op(gpointer input)
 	return d->output;
 }
 
-static void y_simple_operation_class_init(YSimpleOperationClass * slice_klass)
+static void b_simple_operation_class_init(BSimpleOperationClass * slice_klass)
 {
-	YOperationClass *op_klass = (YOperationClass *) slice_klass;
+	BOperationClass *op_klass = (BOperationClass *) slice_klass;
 	op_klass->thread_safe = FALSE;
 	op_klass->op_size = simple_size;
 	op_klass->op_func = simple_op;
@@ -157,23 +157,23 @@ static void y_simple_operation_class_init(YSimpleOperationClass * slice_klass)
 	op_klass->op_data_free = simple_op_data_free;
 }
 
-static void y_simple_operation_init(YSimpleOperation * s)
+static void b_simple_operation_init(BSimpleOperation * s)
 {
-	g_assert(Y_IS_SIMPLE_OPERATION(s));
+	g_assert(B_IS_SIMPLE_OPERATION(s));
 }
 
 /**
- * y_simple_operation_new: (skip)
+ * b_simple_operation_new: (skip)
  * @func: the function
  *
  * Create a new simple operation.
  *
- * Returns: a #YOperation
+ * Returns: a #BOperation
  **/
-YOperation *y_simple_operation_new(YDoubleToDouble func)
+BOperation *b_simple_operation_new(BDoubleToDouble func)
 {
-	YSimpleOperation *o = g_object_new(Y_TYPE_SIMPLE_OPERATION, NULL);
+	BSimpleOperation *o = g_object_new(B_TYPE_SIMPLE_OPERATION, NULL);
 	o->func = func;
 
-	return Y_OPERATION(o);
+	return B_OPERATION(o);
 }

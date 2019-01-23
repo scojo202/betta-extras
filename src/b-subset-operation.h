@@ -1,7 +1,7 @@
 /*
- * y-scalar-property.h :
+ * b-subset-operation.h :
  *
- * Copyright (C) 2016 Scott O. Johnson (scojo202@gmail.com)
+ * Copyright (C) 2017 Scott O. Johnson (scojo202@gmail.com)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -19,19 +19,19 @@
  * USA
  */
 
-#ifndef Y_SCALAR_PROP_H
-#define Y_SCALAR_PROP_H
+#ifndef DATA_VECTOR_SUBSET_H
+#define DATA_VECTOR_SUBSET_H
 
-#include <data/y-data-class.h>
+#include <data/b-data-class.h>
+#include <b-operation.h>
 
 G_BEGIN_DECLS
 
-G_DECLARE_FINAL_TYPE(YPropertyScalar,y_property_scalar,Y,PROPERTY_SCALAR,YScalar)
+G_DECLARE_FINAL_TYPE(BSubsetOperation,b_subset_operation,B,SUBSET_OPERATION,BOperation)
 
-#define Y_TYPE_PROPERTY_SCALAR	(y_property_scalar_get_type ())
-
-YPropertyScalar	*y_property_scalar_new      (GObject *obj, const gchar *name);
+#define B_TYPE_SUBSET_OPERATION  (b_subset_operation_get_type ())
 
 G_END_DECLS
 
 #endif
+

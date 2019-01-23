@@ -1,5 +1,5 @@
 /*
- * y-subset-operation.c :
+ * b-subset-operation.c :
  *
  * Copyright (C) 2017 Scott O. Johnson (scojo202@gmail.com)
  *
@@ -21,11 +21,11 @@
 
 #include <memory.h>
 #include <math.h>
-#include "y-subset-operation.h"
-#include "data/y-struct.h"
+#include "b-subset-operation.h"
+#include "data/b-struct.h"
 
 /**
- * SECTION: y-subset-operation
+ * SECTION: b-subset-operation
  * @short_description: Operation that outputs a subset of a vector or matrix.
  *
  * These output a subset of the input array. The output is smaller in size but has the same number of dimensions.
@@ -42,19 +42,19 @@ enum {
 	N_PROPERTIES
 };
 
-struct _YSubsetOperation {
-	YOperation base;
+struct _BSubsetOperation {
+	BOperation base;
 	int start1, length1, start2, length2;
 	/* stride */
 };
 
-G_DEFINE_TYPE(YSubsetOperation, y_subset_operation, Y_TYPE_OPERATION);
+G_DEFINE_TYPE(BSubsetOperation, b_subset_operation, B_TYPE_OPERATION);
 
 static void
-y_subset_operation_set_property(GObject * gobject, guint param_id,
+subset_operation_set_property(GObject * gobject, guint param_id,
 				GValue const *value, GParamSpec * pspec)
 {
-	YSubsetOperation *sop = Y_SUBSET_OPERATION(gobject);
+	BSubsetOperation *sop = B_SUBSET_OPERATION(gobject);
 
 	switch (param_id) {
 	case SUBSET_PROP_START1:
@@ -76,10 +76,10 @@ y_subset_operation_set_property(GObject * gobject, guint param_id,
 }
 
 static void
-y_subset_operation_get_property(GObject * gobject, guint param_id,
+subset_operation_get_property(GObject * gobject, guint param_id,
 				GValue * value, GParamSpec * pspec)
 {
-	YSubsetOperation *sop = Y_SUBSET_OPERATION(gobject);
+	BSubsetOperation *sop = B_SUBSET_OPERATION(gobject);
 
 	switch (param_id) {
 	case SUBSET_PROP_START1:
@@ -101,17 +101,17 @@ y_subset_operation_get_property(GObject * gobject, guint param_id,
 }
 
 static
-int subset_size(YOperation * op, YData * input, unsigned int *dims)
+int subset_size(BOperation * op, BData * input, unsigned int *dims)
 {
 	int n_dims;
 	g_assert(dims);
-	YSubsetOperation *sop = Y_SUBSET_OPERATION(op);
+	BSubsetOperation *sop = B_SUBSET_OPERATION(op);
 
-	g_assert(!Y_IS_SCALAR(input));
-	g_assert(!Y_IS_STRUCT(input));
+	g_assert(!B_IS_SCALAR(input));
+	g_assert(!B_IS_STRUCT(input));
 
-	if (Y_IS_VECTOR(input)) {
-		unsigned int l = y_vector_get_len(Y_VECTOR(input));
+	if (B_IS_VECTOR(input)) {
+		unsigned int l = b_vector_get_len(B_VECTOR(input));
 		dims[0] =
 		    (sop->start1 + sop->length1 >
 		     l) ? l - sop->start1 : sop->length1;
@@ -119,9 +119,9 @@ int subset_size(YOperation * op, YData * input, unsigned int *dims)
 		return n_dims;
 	}
 
-	YMatrix *mat = Y_MATRIX(input);
+	BMatrix *mat = B_MATRIX(input);
 
-	YMatrixSize size = y_matrix_get_size(Y_MATRIX(mat));
+	BMatrixSize size = b_matrix_get_size(B_MATRIX(mat));
 	int real_length1 =
 	    (sop->start1 + sop->length1 >
 	     size.columns) ? size.columns - sop->start1 : sop->length1;
@@ -137,15 +137,15 @@ int subset_size(YOperation * op, YData * input, unsigned int *dims)
 }
 
 typedef struct {
-	YSubsetOperation sop;
+	BSubsetOperation sop;
 	double *input;
-	YMatrixSize size;
+	BMatrixSize size;
 	double *output;
-	YMatrixSize output_size;
+	BMatrixSize output_size;
 } SubsetOpData;
 
 static
-gpointer subset_op_create_data(YOperation * op, gpointer data, YData * input)
+gpointer subset_op_create_data(BOperation * op, gpointer data, BData * input)
 {
 	if (input == NULL)
 		return NULL;
@@ -157,22 +157,22 @@ gpointer subset_op_create_data(YOperation * op, gpointer data, YData * input)
 		neu = FALSE;
 		d = (SubsetOpData *) data;
 	}
-	YSubsetOperation *sop = Y_SUBSET_OPERATION(op);
+	BSubsetOperation *sop = B_SUBSET_OPERATION(op);
 	d->sop = *sop;
-	if (Y_IS_VECTOR(input)) {
-		YVector *vec = Y_VECTOR(input);
+	if (B_IS_VECTOR(input)) {
+		BVector *vec = B_VECTOR(input);
 		d->input =
-		    y_create_input_array_from_vector(vec, neu, d->size.rows,
+		    b_create_input_array_from_vector(vec, neu, d->size.rows,
 						     d->input);
 		if (d->output_size.columns != sop->length1) {
 			d->output = g_new(double, sop->length1);
 		}
 		return d;
 	}
-	YMatrix *mat = Y_MATRIX(input);
+	BMatrix *mat = B_MATRIX(input);
 	d->input =
-	    y_create_input_array_from_matrix(mat, neu, d->size, d->input);
-	d->size = y_matrix_get_size(mat);
+	    b_create_input_array_from_matrix(mat, neu, d->size, d->input);
+	d->size = b_matrix_get_size(mat);
 	unsigned int dims[2];
 	subset_size(op, input, dims);
 	if (d->output_size.columns != dims[0] || d->output_size.rows != dims[1]) {
@@ -221,12 +221,12 @@ gpointer subset_op(gpointer input)
 	return v;
 }
 
-static void y_subset_operation_class_init(YSubsetOperationClass * subset_klass)
+static void b_subset_operation_class_init(BSubsetOperationClass * subset_klass)
 {
 	GObjectClass *gobject_klass = (GObjectClass *) subset_klass;
-	gobject_klass->set_property = y_subset_operation_set_property;
-	gobject_klass->get_property = y_subset_operation_get_property;
-	YOperationClass *op_klass = (YOperationClass *) subset_klass;
+	gobject_klass->set_property = subset_operation_set_property;
+	gobject_klass->get_property = subset_operation_get_property;
+	BOperationClass *op_klass = (BOperationClass *) subset_klass;
 	op_klass->thread_safe = TRUE;
 	op_klass->op_size = subset_size;
 	op_klass->op_func = subset_op;
@@ -260,9 +260,9 @@ static void y_subset_operation_class_init(YSubsetOperationClass * subset_klass)
 							 G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
-static void y_subset_operation_init(YSubsetOperation * slice)
+static void b_subset_operation_init(BSubsetOperation * slice)
 {
-	g_assert(Y_IS_SUBSET_OPERATION(slice));
+	g_assert(B_IS_SUBSET_OPERATION(slice));
 	slice->start1 = 0;
 	slice->length1 = 1;
 	slice->start2 = 0;

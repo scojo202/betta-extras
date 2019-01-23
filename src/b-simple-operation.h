@@ -1,5 +1,5 @@
 /*
- * y-subset-operation.h :
+ * y-simple-operation.h :
  *
  * Copyright (C) 2017 Scott O. Johnson (scojo202@gmail.com)
  *
@@ -19,17 +19,21 @@
  * USA
  */
 
-#ifndef DATA_VECTOR_SUBSET_H
-#define DATA_VECTOR_SUBSET_H
+#ifndef OP_SIMPLE_H
+#define OP_SIMPLE_H
 
-#include <data/y-data-class.h>
-#include <y-operation.h>
+#include <data/b-data-class.h>
+#include <b-operation.h>
 
 G_BEGIN_DECLS
 
-G_DECLARE_FINAL_TYPE(YSubsetOperation,y_subset_operation,Y,SUBSET_OPERATION,YOperation)
+G_DECLARE_FINAL_TYPE(BSimpleOperation,b_simple_operation,B,SIMPLE_OPERATION,BOperation)
 
-#define Y_TYPE_SUBSET_OPERATION  (y_subset_operation_get_type ())
+#define B_TYPE_SIMPLE_OPERATION  (b_simple_operation_get_type ())
+
+typedef double (*BDoubleToDouble) (double x);
+
+BOperation *b_simple_operation_new (BDoubleToDouble func);
 
 G_END_DECLS
 

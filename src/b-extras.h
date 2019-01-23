@@ -1,7 +1,7 @@
 /*
- * y-fft-operation.h :
+ * b-extras.h :
  *
- * Copyright (C) 2017 Scott O. Johnson (scojo202@gmail.com)
+ * Copyright (C) 2016 Scott O. Johnson (scojo202@gmail.com)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -19,25 +19,18 @@
  * USA
  */
 
-#ifndef OP_FFT_H
-#define OP_FFT_H
+#ifndef B_EXTRAS_H
+#define B_EXTRAS_H
 
-#include <data/y-data-class.h>
-#include <y-operation.h>
-
-G_BEGIN_DECLS
-
-G_DECLARE_FINAL_TYPE(YFFTOperation,y_fft_operation,Y,FFT_OPERATION,YOperation)
-
-#define Y_TYPE_FFT_OPERATION  (y_fft_operation_get_type ())
-
-enum {
-	FFT_MAG = 0,
-	FFT_PHASE
-};
-
-YOperation *y_fft_operation_new (int type);
-
-G_END_DECLS
+#include <b-data-derived.h>
+#include <b-operation.h>
+#include <b-hdf.h>
+#include <b-simple-operation.h>
+#include <b-subset-operation.h>
+#include <b-slice-operation.h>
+#include <b-linear-range.h>
+#include <b-scalar-property.h>
+#include <b-vector-ring.h>
+#include <b-fft-operation.h>
 
 #endif

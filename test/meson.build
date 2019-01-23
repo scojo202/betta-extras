@@ -7,7 +7,7 @@ testdata = executable('testdata',
   c_args : test_cflags,
   link_args : ['-lm'],
   dependencies: [
-    libyextras_dep
+    libbextras_dep
   ],
 )
 
@@ -16,7 +16,7 @@ testhdf5 = executable('testhdf5',
   c_args : test_cflags,
   link_args : ['-lm'],
   dependencies: [
-    libyextras_dep
+    libbextras_dep
   ],
 )
 
@@ -25,7 +25,7 @@ testsignals = executable('testsignals',
   c_args : test_cflags,
   link_args : ['-lm'],
   dependencies: [
-    libyextras_dep
+    libbextras_dep
   ],
 )
 

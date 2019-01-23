@@ -1,5 +1,5 @@
 /*
- * y-hdf.c :
+ * b-hdf.c :
  *
  * Copyright (C) 2016 Scott O. Johnson (scojo202@gmail.com)
  *
@@ -20,58 +20,58 @@
  */
 
 #include <gio/gio.h>
-#include <y-hdf.h>
-#include "data/y-struct.h"
+#include <b-hdf.h>
+#include "data/b-struct.h"
 
 #define DEFLATE_LEVEL 5
 
 /**
- * SECTION: y-hdf
+ * SECTION: b-hdf
  * @short_description: Functions for saving and loading from HDF5 files
  *
  * Utility functions for saving to and loading from HDF5 files.
  *
  **/
 
-struct _YFile {
+struct _BFile {
 	GObject	 base;
 	hid_t handle;
 	gboolean write;
 };
 
-G_DEFINE_TYPE (YFile, y_file, G_TYPE_OBJECT);
+G_DEFINE_TYPE (BFile, b_file, G_TYPE_OBJECT);
 
 static
-void y_file_finalize (GObject *obj)
+void b_file_finalize (GObject *obj)
 {
-	YFile *f = (YFile *) obj;
+	BFile *f = (BFile *) obj;
 	H5Fclose(f->handle);
 }
 
 static
-void y_file_class_init(YFileClass *class)
+void b_file_class_init(BFileClass *class)
 {
 	GObjectClass *gobj_class = (GObjectClass *) class;
-	gobj_class->finalize = y_file_finalize;
+	gobj_class->finalize = b_file_finalize;
 }
 
 static
-void y_file_init(YFile *file)
+void b_file_init(BFile *file)
 {
 
 }
 
 /**
- * y_file_open_for_writing:
+ * b_file_open_for_writing:
  * @filename: filename
  * @overwrite: whether to overwrite the file if it already exists
  * @err: (nullable): a #GError or %NULL
  *
  * Create an HDF5 file for writing.
  *
- * Returns: (transfer full): The #YFile object.
+ * Returns: (transfer full): The #BFile object.
  **/
-YFile * y_file_open_for_writing(const gchar * filename, gboolean overwrite, GError **err)
+BFile * b_file_open_for_writing(const gchar * filename, gboolean overwrite, GError **err)
 {
 	/* make sure file doesn't already exist */
 	GFile *file = g_file_new_for_path(filename);
@@ -85,23 +85,23 @@ YFile * y_file_open_for_writing(const gchar * filename, gboolean overwrite, GErr
 	}
 	hid_t hfile =
 		H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-	YFile *f = g_object_new(Y_TYPE_FILE,NULL);
+	BFile *f = g_object_new(B_TYPE_FILE,NULL);
 	f->handle = hfile;
 	f->write = TRUE;
 	return f;
 }
 
 /**
- * y_file_open_for_reading:
+ * b_file_open_for_reading:
  * @filename: filename
  * @err: (nullable): a #GError or %NULL
  *
  * Create an HDF5 file to be read.
  *
- * Returns: (transfer full): The #YFile object.
+ * Returns: (transfer full): The #BFile object.
  **/
 
-YFile * y_file_open_for_reading(const gchar *filename, GError **err)
+BFile * b_file_open_for_reading(const gchar *filename, GError **err)
 {
 	/* make sure file exists */
 	GFile *file = g_file_new_for_path(filename);
@@ -113,50 +113,50 @@ YFile * y_file_open_for_reading(const gchar *filename, GError **err)
 		return 0;
 	}
 	hid_t hfile = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
-	YFile *f = g_object_new(Y_TYPE_FILE,NULL);
+	BFile *f = g_object_new(B_TYPE_FILE,NULL);
 	f->handle = hfile;
 	f->write = FALSE;
 	return f;
 }
 
 /**
- * y_file_get_handle: (skip)
- * @f: a #YFile
+ * b_file_get_handle: (skip)
+ * @f: a #BFile
  *
  **/
-hid_t y_file_get_handle(YFile *f)
+hid_t b_file_get_handle(BFile *f)
 {
 	return f->handle;
 }
 
 /**
- * y_hdf5_create_group: (skip)
+ * b_hdf5_create_group: (skip)
  * @id: file handle
  * @name: group name
  *
  * Create an HDF5 group.
  **/
 
-hid_t y_hdf5_create_group(hid_t id, const gchar * name)
+hid_t b_hdf5_create_group(hid_t id, const gchar * name)
 {
 	g_assert(id != 0);
 	return H5Gcreate(id, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 }
 
 /**
- * y_vector_attach_h5: (skip)
- * @v: #YVector
+ * b_vector_attach_h5: (skip)
+ * @v: #BVector
  * @group_id: HDF5 group
  * @data_name: name
  *
  * Add a vector to an HDF5 group.
  **/
 
-void y_vector_attach_h5(YVector * v, hid_t group_id, const gchar * data_name)
+void b_vector_attach_h5(BVector * v, hid_t group_id, const gchar * data_name)
 {
-	g_return_if_fail(Y_IS_VECTOR(v));
+	g_return_if_fail(B_IS_VECTOR(v));
 	g_return_if_fail(group_id != 0);
-	hsize_t dims[1] = { y_vector_get_len(v) };
+	hsize_t dims[1] = { b_vector_get_len(v) };
 	if (dims[0] == 0) {
 		g_warning("skipping HDF5 save due to zero length vector");
 		return;
@@ -171,7 +171,7 @@ void y_vector_attach_h5(YVector * v, hid_t group_id, const gchar * data_name)
 	hid_t id =
 	    H5Dcreate2(group_id, data_name, H5T_NATIVE_DOUBLE, dataspace_id,
 		       H5P_DEFAULT, plist_id, H5P_DEFAULT);
-	const double *data = y_vector_get_values(v);
+	const double *data = b_vector_get_values(v);
 	H5Dwrite(id, H5T_NATIVE_DOUBLE, dataspace_id, dataspace_id, H5P_DEFAULT,
 		 data);
 
@@ -182,8 +182,8 @@ void y_vector_attach_h5(YVector * v, hid_t group_id, const gchar * data_name)
 }
 
 /**
- * y_vector_attach_attr_h5: (skip)
- * @v: #YVector
+ * b_vector_attach_attr_h5: (skip)
+ * @v: #BVector
  * @group_id: HDF5 dataset or group
  * @obj_name: name
  * @attr_name: attribute name
@@ -191,13 +191,13 @@ void y_vector_attach_h5(YVector * v, hid_t group_id, const gchar * data_name)
  * Add a vector to an HDF5 group as an attribute.
  **/
 
-void y_vector_attach_attr_h5(YVector * v, hid_t group_id,
+void b_vector_attach_attr_h5(BVector * v, hid_t group_id,
 			     const gchar * obj_name, const gchar * attr_name)
 {
-	g_return_if_fail(Y_IS_VECTOR(v));
+	g_return_if_fail(B_IS_VECTOR(v));
 	g_return_if_fail(group_id != 0);
-	int l = y_vector_get_len(v);
-	const double *d = y_vector_get_values(v);
+	int l = b_vector_get_len(v);
+	const double *d = b_vector_get_values(v);
 	if (l == 0) {
 		g_warning
 		    ("skipping HDF5 save to attribute due to zero length vector");
@@ -215,11 +215,11 @@ void y_vector_attach_attr_h5(YVector * v, hid_t group_id,
  *
  * Add a matrix to an HDF5 group.
  **/
-void y_matrix_attach_h5(YMatrix * m, hid_t group_id, const gchar * data_name)
+void b_matrix_attach_h5(BMatrix * m, hid_t group_id, const gchar * data_name)
 {
-	g_return_if_fail(Y_IS_MATRIX(m));
+	g_return_if_fail(B_IS_MATRIX(m));
 	g_return_if_fail(group_id != 0);
-	hsize_t dims[2] = { y_matrix_get_rows(m), y_matrix_get_columns(m) };
+	hsize_t dims[2] = { b_matrix_get_rows(m), b_matrix_get_columns(m) };
 
 	hid_t dataspace_id = H5Screate_simple(2, dims, NULL);
 	hid_t plist_id = H5Pcreate(H5P_DATASET_CREATE);
@@ -231,7 +231,7 @@ void y_matrix_attach_h5(YMatrix * m, hid_t group_id, const gchar * data_name)
 	    H5Dcreate2(group_id, data_name, H5T_NATIVE_DOUBLE, dataspace_id,
 		       H5P_DEFAULT, plist_id, H5P_DEFAULT);
 	H5Dwrite(id, H5T_NATIVE_DOUBLE, dataspace_id, dataspace_id, H5P_DEFAULT,
-		 y_matrix_get_values(m));
+		 b_matrix_get_values(m));
 
 	H5Sclose(dataspace_id);
 
@@ -244,23 +244,23 @@ void save_func(gpointer key, gpointer value, gpointer user_data)
 {
 	const gchar *name = (gchar *) key;
 	g_message("save %s", name);
-	YData *d = Y_DATA(value);
+	BData *d = B_DATA(value);
 	hid_t *subgroup_id = (hid_t *) user_data;
-	y_data_attach_h5(d, *subgroup_id, name);
+	b_data_attach_h5(d, *subgroup_id, name);
 }
 
 /**
- * y_file_attach_data:
- * @f: #YFile
+ * b_file_attach_data:
+ * @f: #BFile
  * @data_name: path
  * @d: #YData
  *
- * Add a YData object to a #YFile.
+ * Add a YData object to a #BFile.
  **/
-void y_file_attach_data(YFile *f, const gchar *data_name, YData *d)
+void b_file_attach_data(BFile *f, const gchar *data_name, BData *d)
 {
 	g_assert(f->write);
-	y_data_attach_h5(d,f->handle,data_name);
+	b_data_attach_h5(d,f->handle,data_name);
 }
 
 /**
@@ -271,12 +271,12 @@ void y_file_attach_data(YFile *f, const gchar *data_name, YData *d)
  *
  * Add a YData object to an HDF5 group.
  **/
-void y_data_attach_h5(YData * d, hid_t group_id, const gchar * data_name)
+void b_data_attach_h5(BData * d, hid_t group_id, const gchar * data_name)
 {
 	hid_t subgroup_id;
-	g_return_if_fail(Y_IS_DATA(d));
+	g_return_if_fail(B_IS_DATA(d));
 	g_return_if_fail(group_id != 0);
-	char n = y_data_get_n_dimensions(d);
+	char n = b_data_get_n_dimensions(d);
 	switch (n) {
 	case -1:
 		if (data_name)
@@ -285,7 +285,7 @@ void y_data_attach_h5(YData * d, hid_t group_id, const gchar * data_name)
 				      H5P_DEFAULT, H5P_DEFAULT);
 		else
 			subgroup_id = group_id;
-		y_struct_foreach(Y_STRUCT(d), save_func, &subgroup_id);
+		b_struct_foreach(B_STRUCT(d), save_func, &subgroup_id);
 		if (data_name != NULL)
 			H5Gclose(subgroup_id);
 		break;
@@ -293,10 +293,10 @@ void y_data_attach_h5(YData * d, hid_t group_id, const gchar * data_name)
 		g_warning("scalar save to h5 not implemented");
 		break;
 	case 1:
-		y_vector_attach_h5(Y_VECTOR(d), group_id, data_name);
+		b_vector_attach_h5(B_VECTOR(d), group_id, data_name);
 		break;
 	case 2:
-		y_matrix_attach_h5(Y_MATRIX(d), group_id, data_name);
+		b_matrix_attach_h5(B_MATRIX(d), group_id, data_name);
 		break;
 	default:
 		g_warning("number of dimensions %d not supported", n);
@@ -305,7 +305,7 @@ void y_data_attach_h5(YData * d, hid_t group_id, const gchar * data_name)
 }
 
 /**
- * y_vector_from_h5: (skip)
+ * b_vector_from_h5: (skip)
  * @group_id: HDF5 group
  * @data_name: name
  *
@@ -313,7 +313,7 @@ void y_data_attach_h5(YData * d, hid_t group_id, const gchar * data_name)
  *
  * Returns: (transfer full): The vector.
  **/
-YData *y_vector_from_h5(hid_t group_id, const gchar * data_name)
+BData *b_vector_from_h5(hid_t group_id, const gchar * data_name)
 {
 	g_return_val_if_fail(group_id != 0, NULL);
 	htri_t exists = H5Lexists(group_id, data_name, H5P_DEFAULT);
@@ -337,7 +337,7 @@ YData *y_vector_from_h5(hid_t group_id, const gchar * data_name)
 	double *d = g_new(double, current_dims[0]);
 	H5Dread(dataset_h5, H5T_NATIVE_DOUBLE, H5S_ALL, dspace_id, H5P_DEFAULT,
 		d);
-	YData *y = y_val_vector_new(d, current_dims[0], g_free);
+	BData *y = b_val_vector_new(d, current_dims[0], g_free);
 	return y;
 }
 
@@ -350,7 +350,7 @@ YData *y_vector_from_h5(hid_t group_id, const gchar * data_name)
  *
  * Returns: (transfer full): The matrix.
  **/
-YData *y_matrix_from_h5(hid_t group_id, const gchar * data_name)
+BData *b_matrix_from_h5(hid_t group_id, const gchar * data_name)
 {
 	g_return_val_if_fail(group_id != 0, NULL);
 	htri_t exists = H5Lexists(group_id, data_name, H5P_DEFAULT);
@@ -375,20 +375,20 @@ YData *y_matrix_from_h5(hid_t group_id, const gchar * data_name)
 	double *d = g_new(double, current_dims[0] * current_dims[1]);
 	H5Dread(dataset_h5, H5T_NATIVE_DOUBLE, H5S_ALL, dspace_id, H5P_DEFAULT,
 		d);
-	YData *y =
-	    y_val_matrix_new(d, current_dims[0], current_dims[1], g_free);
+	BData *y =
+	    b_val_matrix_new(d, current_dims[0], current_dims[1], g_free);
 	return y;
 }
 
 /**
- * y_val_vector_replace_h5: (skip)
- * @v: YVectorVal
+ * b_val_vector_replace_h5: (skip)
+ * @v: BVectorVal
  * @group_id: HDF5 group
  * @data_name: name
  *
  * Load contents of HDF5 dataset into a vector, replacing its contents.
  **/
-void y_val_vector_replace_h5(YValVector * v, hid_t group_id,
+void b_val_vector_replace_h5(BValVector * v, hid_t group_id,
 			     const gchar * data_name)
 {
 	g_return_if_fail(group_id != 0);
@@ -411,5 +411,5 @@ void y_val_vector_replace_h5(YValVector * v, hid_t group_id,
 	double *d = g_new(double, current_dims[0]);
 	H5Dread(dataset_h5, H5T_NATIVE_DOUBLE, H5S_ALL, dspace_id, H5P_DEFAULT,
 		d);
-	y_val_vector_replace_array(v, d, current_dims[0], g_free);
+	b_val_vector_replace_array(v, d, current_dims[0], g_free);
 }

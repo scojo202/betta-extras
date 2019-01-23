@@ -21,10 +21,10 @@
 
 #include <memory.h>
 #include <math.h>
-#include "y-data-derived.h"
+#include "b-data-derived.h"
 
 /**
- * SECTION: y-data-derived
+ * SECTION: b-data-derived
  * @short_description: Data objects that reflect the outputs of operations.
  *
  * These can change automatically when input data emit changed signals.
@@ -40,9 +40,9 @@ enum {
 	N_PROPERTIES
 };
 
-G_DEFINE_INTERFACE(YDerived, y_derived, Y_TYPE_DATA)
+G_DEFINE_INTERFACE(BDerived, b_derived, B_TYPE_DATA)
 
-static void y_derived_default_init(YDerivedInterface * i)
+static void b_derived_default_init(BDerivedInterface * i)
 {
 	g_object_interface_install_property(i,
 					    g_param_spec_boolean("autorun",
@@ -57,27 +57,27 @@ static void y_derived_default_init(YDerivedInterface * i)
 					    g_param_spec_object("input",
 								"Input data",
 								"The input data",
-								Y_TYPE_DATA,
+								B_TYPE_DATA,
 								G_PARAM_READWRITE));
 	g_object_interface_install_property(i,
 					    g_param_spec_object("operation",
 								"Operation",
 								"The operation",
-								Y_TYPE_OPERATION,
+								B_TYPE_OPERATION,
 								G_PARAM_READWRITE));
 }
 
 static GParamSpec *scalar_properties[N_PROPERTIES] = { NULL, };
 
 /**
- * YDerivedScalar:
+ * BDerivedScalar:
  *
  *
  **/
 
 typedef struct {
-	YOperation *op;
-	YData *input;
+	BOperation *op;
+	BData *input;
 	gulong handler;
 	unsigned int autorun : 1;
 	unsigned int running : 1;	/* is operation currently running? */
@@ -94,8 +94,8 @@ void finalize_derived(Derived *d) {
 		g_object_unref(d->input);
 	}
 	if (d->task_data) {
-		YOperationClass *klass =
-        (YOperationClass *) G_OBJECT_GET_CLASS(d->op);
+		BOperationClass *klass =
+        (BOperationClass *) G_OBJECT_GET_CLASS(d->op);
 		if (klass->op_data_free) {
 			klass->op_data_free(d->task_data);
 		}
@@ -130,35 +130,35 @@ derived_get_property(Derived *d,
 	return found;
 }
 
-struct _YDerivedScalar {
-	YScalar base;
+struct _BDerivedScalar {
+	BScalar base;
 	double cache;
 	Derived der;
 };
 
-static void y_scalar_derived_interface_init(YDerivedInterface * iface)
+static void b_scalar_derived_interface_init(BDerivedInterface * iface)
 {
 
 }
 
-G_DEFINE_TYPE_WITH_CODE(YDerivedScalar, y_derived_scalar, Y_TYPE_SCALAR,
-			G_IMPLEMENT_INTERFACE(Y_TYPE_DERIVED,
-					      y_scalar_derived_interface_init));
+G_DEFINE_TYPE_WITH_CODE(BDerivedScalar, b_derived_scalar, B_TYPE_SCALAR,
+			G_IMPLEMENT_INTERFACE(B_TYPE_DERIVED,
+					      b_scalar_derived_interface_init));
 
 static
-void y_derived_scalar_init(YDerivedScalar * self)
+void b_derived_scalar_init(BDerivedScalar * self)
 {
 
 }
 
-static double scalar_derived_get_value(YScalar * sca)
+static double scalar_derived_get_value(BScalar * sca)
 {
-	YDerivedScalar *scas = (YDerivedScalar *) sca;
+	BDerivedScalar *scas = (BDerivedScalar *) sca;
 
 	if (sca == NULL)
 		return NAN;
 
-	YOperationClass *klass = Y_OPERATION_GET_CLASS(scas->der.op);
+	BOperationClass *klass = B_OPERATION_GET_CLASS(scas->der.op);
 
 	unsigned int dims[3];
 
@@ -167,9 +167,9 @@ static double scalar_derived_get_value(YScalar * sca)
 	/* call op */
 	if (scas->der.task_data == NULL) {
 		scas->der.task_data =
-		    y_operation_create_task_data(scas->der.op, scas->der.input);
+		    b_operation_create_task_data(scas->der.op, scas->der.input);
 	} else {
-		y_operation_update_task_data(scas->der.op, scas->der.task_data,
+		b_operation_update_task_data(scas->der.op, scas->der.task_data,
 					     scas->der.input);
 	}
 	double *dout = klass->op_func(scas->der.task_data);
@@ -183,32 +183,32 @@ scalar_op_cb(GObject * source_object, GAsyncResult * res, gpointer user_data)
 	/* set outputs */
 	GTask *task = G_TASK(res);
 	g_task_propagate_pointer(task, NULL);
-	YDerivedScalar *d = (YDerivedScalar *) user_data;
+	BDerivedScalar *d = (BDerivedScalar *) user_data;
 	d->der.running = FALSE;
-	y_data_emit_changed(Y_DATA(user_data));
+	b_data_emit_changed(B_DATA(user_data));
 }
 
-static void scalar_on_input_changed(YData * data, gpointer user_data)
+static void scalar_on_input_changed(BData * data, gpointer user_data)
 {
-	YDerivedScalar *d = Y_DERIVED_SCALAR(user_data);
+	BDerivedScalar *d = B_DERIVED_SCALAR(user_data);
 	if (!d->der.autorun) {
-		y_data_emit_changed(Y_DATA(d));
+		b_data_emit_changed(B_DATA(d));
 	} else {
 		if (d->der.running)
 			return;
 		d->der.running = TRUE;
-		YOperationClass *klass = Y_OPERATION_GET_CLASS(d->der.op);
+		BOperationClass *klass = B_OPERATION_GET_CLASS(d->der.op);
 		if (klass->thread_safe) {
 			/* get task data, run in a thread */
-			y_operation_update_task_data(d->der.op,
+			b_operation_update_task_data(d->der.op,
 						     d->der.task_data, data);
-			y_operation_run_task(d->der.op, d->der.task_data,
+			b_operation_run_task(d->der.op, d->der.task_data,
 					     scalar_op_cb, d);
 		} else {
 			/* load new values into the cache */
-			d->cache = scalar_derived_get_value(Y_SCALAR(d));
+			d->cache = scalar_derived_get_value(B_SCALAR(d));
 			d->der.running = FALSE;
-			y_data_emit_changed(Y_DATA(d));
+			b_data_emit_changed(B_DATA(d));
 		}
 	}
 }
@@ -216,16 +216,16 @@ static void scalar_on_input_changed(YData * data, gpointer user_data)
 static void
 scalar_on_op_changed(GObject * gobject, GParamSpec * pspec, gpointer user_data)
 {
-	YDerivedScalar *d = Y_DERIVED_SCALAR(user_data);
-	y_data_emit_changed(Y_DATA(d));
+	BDerivedScalar *d = B_DERIVED_SCALAR(user_data);
+	b_data_emit_changed(B_DATA(d));
 }
 
 static void scalar_derived_finalize(GObject * obj)
 {
-	YDerivedScalar *vec = (YDerivedScalar *) obj;
+	BDerivedScalar *vec = (BDerivedScalar *) obj;
 	finalize_derived(&vec->der);
 
-	GObjectClass *obj_class = G_OBJECT_CLASS(y_derived_scalar_parent_class);
+	GObjectClass *obj_class = G_OBJECT_CLASS(b_derived_scalar_parent_class);
 
 	obj_class->finalize(obj);
 }
@@ -235,7 +235,7 @@ y_scalar_derived_set_property(GObject * object,
 			      guint property_id,
 			      const GValue * value, GParamSpec * pspec)
 {
-	YDerivedScalar *s = Y_DERIVED_SCALAR(object);
+	BDerivedScalar *s = B_DERIVED_SCALAR(object);
 
 	switch (property_id) {
 	case PROP_AUTORUN:
@@ -245,7 +245,7 @@ y_scalar_derived_set_property(GObject * object,
 		s->der.input = g_value_get_object(value);
 		g_signal_connect(s->der.input, "changed",
 				 G_CALLBACK(scalar_on_input_changed), s);
-		y_data_emit_changed(Y_DATA(s));
+		b_data_emit_changed(B_DATA(s));
 		break;
 	case PROP_OPERATION:
 		s->der.op = g_value_get_object(value);
@@ -265,7 +265,7 @@ y_scalar_derived_get_property(GObject * object,
 			      guint property_id,
 			      GValue * value, GParamSpec * pspec)
 {
-	YDerivedScalar *s = Y_DERIVED_SCALAR(object);
+	BDerivedScalar *s = B_DERIVED_SCALAR(object);
 
 	gboolean found = derived_get_property(&s->der,property_id,value);
 	if(found) {
@@ -281,10 +281,10 @@ y_scalar_derived_get_property(GObject * object,
 }
 
 static
-void y_derived_scalar_class_init(YDerivedScalarClass * klass)
+void b_derived_scalar_class_init(BDerivedScalarClass * klass)
 {
 	GObjectClass *gobject_class = (GObjectClass *) klass;
-	YScalarClass *scalar_class = (YScalarClass *) klass;
+	BScalarClass *scalar_class = (BScalarClass *) klass;
 
 	gobject_class->finalize = scalar_derived_finalize;
 	gobject_class->set_property = y_scalar_derived_set_property;
@@ -301,10 +301,10 @@ void y_derived_scalar_class_init(YDerivedScalarClass * klass)
 							       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 	scalar_properties[PROP_INPUT] =
 	    g_param_spec_object("input", "Input data", "The input data",
-				Y_TYPE_DATA, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+				B_TYPE_DATA, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 	scalar_properties[PROP_OPERATION] =
 	    g_param_spec_object("operation", "Operation", "The operation",
-				Y_TYPE_OPERATION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+				B_TYPE_OPERATION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
 	g_object_class_override_property(gobject_class, PROP_AUTORUN,
 					 "autorun");
@@ -314,25 +314,25 @@ void y_derived_scalar_class_init(YDerivedScalarClass * klass)
 }
 
 /**
- * y_derived_scalar_new:
+ * b_derived_scalar_new:
  * @input: an input array
  * @op: an operation
  *
- * Create a new #YDerivedScalar based on an input #YData and a #YOperation.
+ * Create a new #BDerivedScalar based on an input #YData and a #BOperation.
  *
  * Returns: a #YData
  **/
-YData *y_derived_scalar_new(YData * input, YOperation * op)
+BData *b_derived_scalar_new(BData * input, BOperation * op)
 {
 	if (input)
-		g_assert(Y_IS_DATA(input));
-	g_assert(Y_IS_OPERATION(op));
+		g_assert(B_IS_DATA(input));
+	g_assert(B_IS_OPERATION(op));
 
-	YData *d = g_object_new(Y_TYPE_DERIVED_SCALAR, "operation", op, NULL);
+	BData *d = g_object_new(B_TYPE_DERIVED_SCALAR, "operation", op, NULL);
 
-	YDerivedScalar *vd = (YDerivedScalar *) d;
+	BDerivedScalar *vd = (BDerivedScalar *) d;
 
-	if (Y_IS_DATA(d) && Y_IS_DATA(input)) {
+	if (B_IS_DATA(d) && B_IS_DATA(input)) {
 		g_object_set(vd, "input", input, NULL);
 	}
 	return d;
@@ -341,53 +341,44 @@ YData *y_derived_scalar_new(YData * input, YOperation * op)
 /****************************************************************************/
 
 /**
- * YDerivedVector:
+ * BDerivedVector:
  *
  * Object representing data.
  **/
 
-struct _YDerivedVector {
-	YVector base;
+struct _BDerivedVector {
+	BVector base;
 	unsigned int currlen;
 	Derived der;
 };
 
 static GParamSpec *vector_properties[N_PROPERTIES] = { NULL, };
 
-static void y_derived_vector_interface_init(YDerivedInterface * iface)
+static void b_derived_vector_interface_init(BDerivedInterface * iface)
 {
 
 }
 
-G_DEFINE_TYPE_WITH_CODE(YDerivedVector, y_derived_vector, Y_TYPE_VECTOR,
-			G_IMPLEMENT_INTERFACE(Y_TYPE_DERIVED,
-					      y_derived_vector_interface_init));
+G_DEFINE_TYPE_WITH_CODE(BDerivedVector, b_derived_vector, B_TYPE_VECTOR,
+			G_IMPLEMENT_INTERFACE(B_TYPE_DERIVED,
+					      b_derived_vector_interface_init));
 
 static void vector_derived_finalize(GObject * obj)
 {
-	YDerivedVector *vec = (YDerivedVector *) obj;
+	BDerivedVector *vec = (BDerivedVector *) obj;
 	finalize_derived(&vec->der);
 
-	GObjectClass *obj_class = G_OBJECT_CLASS(y_derived_vector_parent_class);
+	GObjectClass *obj_class = G_OBJECT_CLASS(b_derived_vector_parent_class);
 
 	obj_class->finalize(obj);
 }
 
-#if 0
-static YData *vector_derived_dup(YData const *src)
+static unsigned int vector_derived_load_len(BVector * vec)
 {
-	YDerivedVector *dst = g_object_new(G_OBJECT_TYPE(src), NULL);
-	YDerivedVector const *src_val = (YDerivedVector const *)src;
-	return Y_DATA(dst);
-}
-#endif
-
-static unsigned int vector_derived_load_len(YVector * vec)
-{
-	YDerivedVector *vecd = (YDerivedVector *) vec;
+	BDerivedVector *vecd = (BDerivedVector *) vec;
 	g_assert(vecd->der.op);
-	YOperationClass *klass =
-	    (YOperationClass *) G_OBJECT_GET_CLASS(vecd->der.op);
+	BOperationClass *klass =
+	    (BOperationClass *) G_OBJECT_GET_CLASS(vecd->der.op);
 	g_assert(klass);
 
 	unsigned int newdim;
@@ -402,30 +393,30 @@ static unsigned int vector_derived_load_len(YVector * vec)
 	return newdim;
 }
 
-static double *vector_derived_load_values(YVector * vec)
+static double *vector_derived_load_values(BVector * vec)
 {
-	YDerivedVector *vecs = (YDerivedVector *) vec;
+	BDerivedVector *vecs = (BDerivedVector *) vec;
 
 	double *v = NULL;
 
-	unsigned int len = y_vector_get_len(vec);
+	unsigned int len = b_vector_get_len(vec);
 
 	if (vecs->currlen != len) {
-		v=y_vector_replace_cache(vec,len);
+		v=b_vector_replace_cache(vec,len);
 		vecs->currlen = len;
 	} else {
-		v = y_vector_replace_cache(vec,vecs->currlen);
+		v = b_vector_replace_cache(vec,vecs->currlen);
 	}
 	if (v == NULL)
 		return NULL;
 
 	/* call op */
-	YOperationClass *klass = Y_OPERATION_GET_CLASS(vecs->der.op);
+	BOperationClass *klass = B_OPERATION_GET_CLASS(vecs->der.op);
 	if (vecs->der.task_data == NULL) {
 		vecs->der.task_data =
-		    y_operation_create_task_data(vecs->der.op, vecs->der.input);
+		    b_operation_create_task_data(vecs->der.op, vecs->der.input);
 	} else {
-		y_operation_update_task_data(vecs->der.op, vecs->der.task_data,
+		b_operation_update_task_data(vecs->der.op, vecs->der.task_data,
 					     vecs->der.input);
 	}
 	double *dout = klass->op_func(vecs->der.task_data);
@@ -436,9 +427,9 @@ static double *vector_derived_load_values(YVector * vec)
 	return v;
 }
 
-static double vector_derived_get_value(YVector * vec, unsigned i)
+static double vector_derived_get_value(BVector * vec, unsigned i)
 {
-	const double *d = y_vector_get_values(vec);	/* fills the cache */
+	const double *d = b_vector_get_values(vec);	/* fills the cache */
 	return d[i];
 }
 
@@ -448,35 +439,35 @@ op_cb(GObject * source_object, GAsyncResult * res, gpointer user_data)
 	/* set outputs */
 	GTask *task = G_TASK(res);
 	g_task_propagate_pointer(task, NULL);
-	YDerivedVector *d = (YDerivedVector *) user_data;
+	BDerivedVector *d = (BDerivedVector *) user_data;
 	d->der.running = FALSE;
-	y_data_emit_changed(Y_DATA(user_data));
+	b_data_emit_changed(B_DATA(user_data));
 }
 
-static void on_input_changed_after(YData * data, gpointer user_data)
+static void on_input_changed_after(BData * data, gpointer user_data)
 {
-	YDerivedVector *d = Y_DERIVED_VECTOR(user_data);
+	BDerivedVector *d = B_DERIVED_VECTOR(user_data);
 	/* if shape changed, adjust length */
 	/* FIXME: this just loads the length every time */
-	vector_derived_load_len(Y_VECTOR(d));
+	vector_derived_load_len(B_VECTOR(d));
 	if (!d->der.autorun) {
-		y_data_emit_changed(Y_DATA(d));
+		b_data_emit_changed(B_DATA(d));
 	} else {
 		if (d->der.running)
 			return;
 		d->der.running = TRUE;
-		YOperationClass *klass = Y_OPERATION_GET_CLASS(d->der.op);
+		BOperationClass *klass = B_OPERATION_GET_CLASS(d->der.op);
 		if (klass->thread_safe) {
 			/* get task data, run in a thread */
-			y_operation_update_task_data(d->der.op,
+			b_operation_update_task_data(d->der.op,
 						     d->der.task_data, data);
-			y_operation_run_task(d->der.op, d->der.task_data, op_cb,
+			b_operation_run_task(d->der.op, d->der.task_data, op_cb,
 					     d);
 		} else {
 			/* load new values into the cache */
-			vector_derived_load_values(Y_VECTOR(d));
+			vector_derived_load_values(B_VECTOR(d));
 			d->der.running = FALSE;
-			y_data_emit_changed(Y_DATA(d));
+			b_data_emit_changed(B_DATA(d));
 		}
 	}
 }
@@ -484,17 +475,17 @@ static void on_input_changed_after(YData * data, gpointer user_data)
 static void
 on_op_changed(GObject * gobject, GParamSpec * pspec, gpointer user_data)
 {
-	YDerivedVector *d = Y_DERIVED_VECTOR(user_data);
-	vector_derived_load_len(Y_VECTOR(d));
-	y_data_emit_changed(Y_DATA(d));
+	BDerivedVector *d = B_DERIVED_VECTOR(user_data);
+	vector_derived_load_len(B_VECTOR(d));
+	b_data_emit_changed(B_DATA(d));
 }
 
 static void
-y_derived_vector_set_property(GObject * object,
+b_derived_vector_set_property(GObject * object,
 			      guint property_id,
 			      const GValue * value, GParamSpec * pspec)
 {
-	YDerivedVector *v = Y_DERIVED_VECTOR(object);
+	BDerivedVector *v = B_DERIVED_VECTOR(object);
 	Derived *d = &v->der;
 
 	switch (property_id) {
@@ -510,7 +501,7 @@ y_derived_vector_set_property(GObject * object,
 		g_object_ref_sink(d->input);
 		d->handler = g_signal_connect(d->input, "changed",
 				 G_CALLBACK(on_input_changed_after), v);
-		y_data_emit_changed(Y_DATA(v));
+		b_data_emit_changed(B_DATA(v));
 		break;
 	case PROP_OPERATION:
 		d->op = g_value_dup_object(value);
@@ -525,11 +516,11 @@ y_derived_vector_set_property(GObject * object,
 }
 
 static void
-y_derived_vector_get_property(GObject * object,
+b_derived_vector_get_property(GObject * object,
 			      guint property_id,
 			      GValue * value, GParamSpec * pspec)
 {
-	YDerivedVector *v = Y_DERIVED_VECTOR(object);
+	BDerivedVector *v = B_DERIVED_VECTOR(object);
 
 	gboolean found = derived_get_property(&v->der,property_id,value);
 	if(found) {
@@ -544,17 +535,15 @@ y_derived_vector_get_property(GObject * object,
 	}
 }
 
-static void y_derived_vector_class_init(YDerivedVectorClass * slice_klass)
+static void b_derived_vector_class_init(BDerivedVectorClass * slice_klass)
 {
 	GObjectClass *gobject_class = (GObjectClass *) slice_klass;
-	//YDataClass *ydata_klass = (YDataClass *) gobject_class;
-	YVectorClass *vector_klass = (YVectorClass *) gobject_class;
+	BVectorClass *vector_klass = (BVectorClass *) gobject_class;
 
 	gobject_class->finalize = vector_derived_finalize;
-	gobject_class->set_property = y_derived_vector_set_property;
-	gobject_class->get_property = y_derived_vector_get_property;
+	gobject_class->set_property = b_derived_vector_set_property;
+	gobject_class->get_property = b_derived_vector_get_property;
 
-	//ydata_klass->dup      = data_vector_slice_dup;
 	vector_klass->load_len = vector_derived_load_len;
 	vector_klass->load_values = vector_derived_load_values;
 	vector_klass->get_value = vector_derived_get_value;
@@ -568,10 +557,10 @@ static void y_derived_vector_class_init(YDerivedVectorClass * slice_klass)
 							       G_PARAM_READWRITE);
 	vector_properties[PROP_INPUT] =
 	    g_param_spec_object("input", "Input data", "The input data",
-				Y_TYPE_DATA, G_PARAM_READWRITE);
+				B_TYPE_DATA, G_PARAM_READWRITE);
 	vector_properties[PROP_OPERATION] =
 	    g_param_spec_object("operation", "Operation", "The operation",
-				Y_TYPE_OPERATION, G_PARAM_READWRITE);
+				B_TYPE_OPERATION, G_PARAM_READWRITE);
 
 	g_object_class_override_property(gobject_class, PROP_AUTORUN,
 					 "autorun");
@@ -580,30 +569,30 @@ static void y_derived_vector_class_init(YDerivedVectorClass * slice_klass)
 					 "operation");
 }
 
-static void y_derived_vector_init(YDerivedVector * der)
+static void b_derived_vector_init(BDerivedVector * der)
 {
 }
 
 /**
- * y_derived_vector_new:
+ * b_derived_vector_new:
  * @input: an input array (nullable)
  * @op: an operation
  *
- * Create a new #YDerivedVector based on an input #YData and a #YOperation.
+ * Create a new #BDerivedVector based on an input #YData and a #BOperation.
  *
  * Returns: a #YData
  **/
-YData *y_derived_vector_new(YData * input, YOperation * op)
+BData *b_derived_vector_new(BData * input, BOperation * op)
 {
 	if (input)
-		g_assert(Y_IS_DATA(input));
-	g_assert(Y_IS_OPERATION(op));
+		g_assert(B_IS_DATA(input));
+	g_assert(B_IS_OPERATION(op));
 
-	YData *d = g_object_new(Y_TYPE_DERIVED_VECTOR, "operation", op, NULL);
+	BData *d = g_object_new(B_TYPE_DERIVED_VECTOR, "operation", op, NULL);
 
-	YDerivedVector *vd = (YDerivedVector *) d;
+	BDerivedVector *vd = (BDerivedVector *) d;
 
-	if (Y_IS_DATA(d) && Y_IS_DATA(input)) {
+	if (B_IS_DATA(d) && B_IS_DATA(input)) {
 		g_object_set(vd, "input", input, NULL);
 	}
 	return d;
@@ -612,14 +601,14 @@ YData *y_derived_vector_new(YData * input, YOperation * op)
 /****************************************************************************/
 
 /**
- * YDerivedMatrix:
+ * BDerivedMatrix:
  *
  * Object representing data.
  **/
 
-struct _YDerivedMatrix {
-	YMatrix base;
-	YMatrixSize currsize;
+struct _BDerivedMatrix {
+	BMatrix base;
+	BMatrixSize currsize;
 	Derived der;
 	double *cache;
 	/* might need access to whether cache is OK */
@@ -627,32 +616,32 @@ struct _YDerivedMatrix {
 
 static GParamSpec *matrix_properties[N_PROPERTIES] = { NULL, };
 
-static void y_derived_matrix_interface_init(YDerivedInterface * iface)
+static void b_derived_matrix_interface_init(BDerivedInterface * iface)
 {
 
 }
 
-G_DEFINE_TYPE_WITH_CODE(YDerivedMatrix, y_derived_matrix, Y_TYPE_MATRIX,
-			G_IMPLEMENT_INTERFACE(Y_TYPE_DERIVED,
-					      y_derived_matrix_interface_init));
+G_DEFINE_TYPE_WITH_CODE(BDerivedMatrix, b_derived_matrix, B_TYPE_MATRIX,
+			G_IMPLEMENT_INTERFACE(B_TYPE_DERIVED,
+					      b_derived_matrix_interface_init));
 
 static void derived_matrix_finalize(GObject * obj)
 {
-	YDerivedMatrix *vec = (YDerivedMatrix *) obj;
+	BDerivedMatrix *vec = (BDerivedMatrix *) obj;
 
 	finalize_derived(&vec->der);
 
-	GObjectClass *obj_class = G_OBJECT_CLASS(y_derived_matrix_parent_class);
+	GObjectClass *obj_class = G_OBJECT_CLASS(b_derived_matrix_parent_class);
 
 	obj_class->finalize(obj);
 }
 
-static YMatrixSize derived_matrix_load_size(YMatrix * vec)
+static BMatrixSize derived_matrix_load_size(BMatrix * vec)
 {
-	YDerivedMatrix *vecd = (YDerivedMatrix *) vec;
+	BDerivedMatrix *vecd = (BDerivedMatrix *) vec;
 	g_assert(vecd->der.op);
-	YOperationClass *klass =
-	    (YOperationClass *) G_OBJECT_GET_CLASS(vecd->der.op);
+	BOperationClass *klass =
+	    (BOperationClass *) G_OBJECT_GET_CLASS(vecd->der.op);
 	g_assert(klass);
 
 	unsigned int newdim[2];
@@ -666,20 +655,20 @@ static YMatrixSize derived_matrix_load_size(YMatrix * vec)
 		newdim[1] = 0;
 	}
 
-	YMatrixSize size;
+	BMatrixSize size;
 	size.columns = newdim[0];
 	size.rows = newdim[1];
 
 	return size;
 }
 
-static double *derived_matrix_load_values(YMatrix * vec)
+static double *derived_matrix_load_values(BMatrix * vec)
 {
-	YDerivedMatrix *vecs = (YDerivedMatrix *) vec;
+	BDerivedMatrix *vecs = (BDerivedMatrix *) vec;
 
 	double *v = NULL;
 
-	YMatrixSize size = y_matrix_get_size(vec);
+	BMatrixSize size = b_matrix_get_size(vec);
 
 	if (vecs->currsize.rows != size.rows
 	    || vecs->currsize.columns != size.columns) {
@@ -695,12 +684,12 @@ static double *derived_matrix_load_values(YMatrix * vec)
 		return NULL;
 
 	/* call op */
-	YOperationClass *klass = Y_OPERATION_GET_CLASS(vecs->der.op);
+	BOperationClass *klass = B_OPERATION_GET_CLASS(vecs->der.op);
 	if (vecs->der.task_data == NULL) {
 		vecs->der.task_data =
-		    y_operation_create_task_data(vecs->der.op, vecs->der.input);
+		    b_operation_create_task_data(vecs->der.op, vecs->der.input);
 	} else {
-		y_operation_update_task_data(vecs->der.op, vecs->der.task_data,
+		b_operation_update_task_data(vecs->der.op, vecs->der.task_data,
 					     vecs->der.input);
 	}
 	double *dout = klass->op_func(vecs->der.task_data);
@@ -711,10 +700,10 @@ static double *derived_matrix_load_values(YMatrix * vec)
 	return v;
 }
 
-static double derived_matrix_get_value(YMatrix * vec, unsigned i, unsigned j)
+static double derived_matrix_get_value(BMatrix * vec, unsigned i, unsigned j)
 {
-	YMatrixSize size = y_matrix_get_size(vec);
-	const double *d = y_matrix_get_values(vec);	/* fills the cache */
+	BMatrixSize size = b_matrix_get_size(vec);
+	const double *d = b_matrix_get_values(vec);	/* fills the cache */
 	return d[i * size.columns + j];
 }
 
@@ -724,35 +713,35 @@ op_cb2(GObject * source_object, GAsyncResult * res, gpointer user_data)
 	/* set outputs */
 	GTask *task = G_TASK(res);
 	g_task_propagate_pointer(task, NULL);
-	YDerivedMatrix *d = (YDerivedMatrix *) user_data;
+	BDerivedMatrix *d = (BDerivedMatrix *) user_data;
 	d->der.running = FALSE;
-	y_data_emit_changed(Y_DATA(user_data));
+	b_data_emit_changed(B_DATA(user_data));
 }
 
-static void on_input_changed_after2(YData * data, gpointer user_data)
+static void on_input_changed_after2(BData * data, gpointer user_data)
 {
-	YDerivedMatrix *d = Y_DERIVED_MATRIX(user_data);
+	BDerivedMatrix *d = B_DERIVED_MATRIX(user_data);
 	/* if shape changed, adjust length */
 	/* FIXME: this just loads the length every time */
-	derived_matrix_load_size(Y_MATRIX(d));
+	derived_matrix_load_size(B_MATRIX(d));
 	if (!d->der.autorun) {
-		y_data_emit_changed(Y_DATA(d));
+		b_data_emit_changed(B_DATA(d));
 	} else {
 		if (d->der.running)
 			return;
 		d->der.running = TRUE;
-		YOperationClass *klass = Y_OPERATION_GET_CLASS(d->der.op);
+		BOperationClass *klass = B_OPERATION_GET_CLASS(d->der.op);
 		if (klass->thread_safe) {
 			/* get task data, run in a thread */
-			y_operation_update_task_data(d->der.op,
+			b_operation_update_task_data(d->der.op,
 						     d->der.task_data, data);
-			y_operation_run_task(d->der.op, d->der.task_data,
+			b_operation_run_task(d->der.op, d->der.task_data,
 					     op_cb2, d);
 		} else {
 			/* load new values into the cache */
-			derived_matrix_load_values(Y_MATRIX(d));
+			derived_matrix_load_values(B_MATRIX(d));
 			d->der.running = FALSE;
-			y_data_emit_changed(Y_DATA(d));
+			b_data_emit_changed(B_DATA(d));
 		}
 	}
 }
@@ -760,17 +749,17 @@ static void on_input_changed_after2(YData * data, gpointer user_data)
 static void
 on_op_changed2(GObject * gobject, GParamSpec * pspec, gpointer user_data)
 {
-	YDerivedMatrix *d = Y_DERIVED_MATRIX(user_data);
-	derived_matrix_load_size(Y_MATRIX(d));
-	y_data_emit_changed(Y_DATA(d));
+	BDerivedMatrix *d = B_DERIVED_MATRIX(user_data);
+	derived_matrix_load_size(B_MATRIX(d));
+	b_data_emit_changed(B_DATA(d));
 }
 
 static void
-y_derived_matrix_set_property(GObject * object,
+b_derived_matrix_set_property(GObject * object,
 			      guint property_id,
 			      const GValue * value, GParamSpec * pspec)
 {
-	YDerivedMatrix *v = Y_DERIVED_MATRIX(object);
+	BDerivedMatrix *v = B_DERIVED_MATRIX(object);
 	Derived *d = &v->der;
 
 	switch (property_id) {
@@ -782,7 +771,7 @@ y_derived_matrix_set_property(GObject * object,
 		d->input = g_object_ref_sink(d->input);
 		g_signal_connect(d->input, "changed",
 				 G_CALLBACK(on_input_changed_after2), v);
-		y_data_emit_changed(Y_DATA(v));
+		b_data_emit_changed(B_DATA(v));
 		break;
 	case PROP_OPERATION:
 		d->op = g_value_get_object(value);
@@ -798,11 +787,11 @@ y_derived_matrix_set_property(GObject * object,
 }
 
 static void
-y_derived_matrix_get_property(GObject * object,
+b_derived_matrix_get_property(GObject * object,
 			      guint property_id,
 			      GValue * value, GParamSpec * pspec)
 {
-	YDerivedMatrix *v = Y_DERIVED_MATRIX(object);
+	BDerivedMatrix *v = B_DERIVED_MATRIX(object);
 
 	gboolean found = derived_get_property(&v->der,property_id,value);
 	if(found) {
@@ -817,15 +806,15 @@ y_derived_matrix_get_property(GObject * object,
 	}
 }
 
-static void y_derived_matrix_class_init(YDerivedMatrixClass * slice_klass)
+static void b_derived_matrix_class_init(BDerivedMatrixClass * slice_klass)
 {
 	GObjectClass *gobject_class = (GObjectClass *) slice_klass;
 	//YDataClass *ydata_klass = (YDataClass *) gobject_class;
-	YMatrixClass *matrix_klass = (YMatrixClass *) gobject_class;
+	BMatrixClass *matrix_klass = (BMatrixClass *) gobject_class;
 
 	gobject_class->finalize = derived_matrix_finalize;
-	gobject_class->set_property = y_derived_matrix_set_property;
-	gobject_class->get_property = y_derived_matrix_get_property;
+	gobject_class->set_property = b_derived_matrix_set_property;
+	gobject_class->get_property = b_derived_matrix_get_property;
 
 	//ydata_klass->dup      = data_vector_slice_dup;
 	matrix_klass->load_size = derived_matrix_load_size;
@@ -841,10 +830,10 @@ static void y_derived_matrix_class_init(YDerivedMatrixClass * slice_klass)
 							       G_PARAM_READWRITE);
 	matrix_properties[PROP_INPUT] =
 	    g_param_spec_object("input", "Input data", "The input data",
-				Y_TYPE_DATA, G_PARAM_READWRITE);
+				B_TYPE_DATA, G_PARAM_READWRITE);
 	matrix_properties[PROP_OPERATION] =
 	    g_param_spec_object("operation", "Operation", "The operation",
-				Y_TYPE_OPERATION, G_PARAM_READWRITE);
+				B_TYPE_OPERATION, G_PARAM_READWRITE);
 
 	g_object_class_override_property(gobject_class, PROP_AUTORUN,
 					 "autorun");
@@ -853,30 +842,30 @@ static void y_derived_matrix_class_init(YDerivedMatrixClass * slice_klass)
 					 "operation");
 }
 
-static void y_derived_matrix_init(YDerivedMatrix * der)
+static void b_derived_matrix_init(BDerivedMatrix * der)
 {
 }
 
 /**
- * y_derived_matrix_new:
+ * b_derived_matrix_new:
  * @input: an input array (nullable)
  * @op: an operation
  *
- * Create a new #YDerivedMatrix based on an input #YData and a #YOperation.
+ * Create a new #BDerivedMatrix based on an input #YData and a #BOperation.
  *
  * Returns: a #YData
  **/
-YData *y_derived_matrix_new(YData * input, YOperation * op)
+BData *b_derived_matrix_new(BData * input, BOperation * op)
 {
 	if (input)
-		g_assert(Y_IS_DATA(input));
-	g_assert(Y_IS_OPERATION(op));
+		g_assert(B_IS_DATA(input));
+	g_assert(B_IS_OPERATION(op));
 
-	YData *d = g_object_new(Y_TYPE_DERIVED_MATRIX, "operation", op, NULL);
+	BData *d = g_object_new(B_TYPE_DERIVED_MATRIX, "operation", op, NULL);
 
-	YDerivedMatrix *vd = (YDerivedMatrix *) d;
+	BDerivedMatrix *vd = (BDerivedMatrix *) d;
 
-	if (Y_IS_DATA(d) && Y_IS_DATA(input)) {
+	if (B_IS_DATA(d) && B_IS_DATA(input)) {
 		g_object_set(vd, "input", input, NULL);
 	}
 	return d;

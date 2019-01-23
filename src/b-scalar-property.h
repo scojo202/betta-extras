@@ -1,7 +1,7 @@
 /*
- * y-simple-operation.h :
+ * y-scalar-property.h :
  *
- * Copyright (C) 2017 Scott O. Johnson (scojo202@gmail.com)
+ * Copyright (C) 2016 Scott O. Johnson (scojo202@gmail.com)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -19,23 +19,19 @@
  * USA
  */
 
-#ifndef OP_SIMPLE_H
-#define OP_SIMPLE_H
+#ifndef _SCALAR_PROP_H
+#define _SCALAR_PROP_H
 
-#include <data/y-data-class.h>
-#include <y-operation.h>
+#include <data/b-data-class.h>
 
 G_BEGIN_DECLS
 
-G_DECLARE_FINAL_TYPE(YSimpleOperation,y_simple_operation,Y,SIMPLE_OPERATION,YOperation)
+G_DECLARE_FINAL_TYPE(BPropertyScalar,b_property_scalar,B,PROPERTY_SCALAR,BScalar)
 
-#define Y_TYPE_SIMPLE_OPERATION  (y_simple_operation_get_type ())
+#define B_TYPE_PROPERTY_SCALAR	(b_property_scalar_get_type ())
 
-typedef double (*YDoubleToDouble) (double x);
-
-YOperation *y_simple_operation_new (YDoubleToDouble func);
+BPropertyScalar	*b_property_scalar_new      (GObject *obj, const gchar *name);
 
 G_END_DECLS
 
 #endif
-

@@ -1,22 +1,22 @@
 #include <math.h>
-#include <y-extras.h>
+#include <b-extras.h>
 
 int i = 0;
-YMatrix *a;
-YDerivedVector *b;
-YDerivedVector *c;
-YOperation *s;
-YOperation *f;
+BMatrix *a;
+BDerivedVector *b;
+BDerivedVector *c;
+BOperation *s;
+BOperation *f;
 GMutex mutex;
 
 #define THREAD 1
 
 static void
-on_changed(YData *data, gpointer user_data)
+on_changed(BData *data, gpointer user_data)
 {
 
   //double q = y_vector_get_value(Y_VECTOR(data),0);
-  const double *p = y_vector_get_values(Y_VECTOR(data));
+  const double *p = b_vector_get_values(B_VECTOR(data));
   //g_message("data: %f",q);
   g_message("data: %f",p[i]);
 
@@ -25,10 +25,10 @@ on_changed(YData *data, gpointer user_data)
 static gboolean
 emit(gpointer user_data)
 {
-  YData *data = (YData *) user_data;
+  BData *data = (BData *) user_data;
   g_message("emit");
   g_mutex_lock(&mutex);
-  y_data_emit_changed(data);
+  b_data_emit_changed(data);
   g_mutex_unlock(&mutex);
 
   return FALSE;
@@ -40,8 +40,8 @@ feeder_thread(gpointer data)
   int j;
   while(i<10000) {
     g_mutex_lock(&mutex);
-    double *data = y_val_matrix_get_array(Y_VAL_MATRIX(a));
-    for(j=0;j<y_matrix_get_rows(a)*y_matrix_get_columns(a);j++)
+    double *data = b_val_matrix_get_array(B_VAL_MATRIX(a));
+    for(j=0;j<b_matrix_get_rows(a)*b_matrix_get_columns(a);j++)
       {
         data[j]=g_random_double();
       }
@@ -62,7 +62,7 @@ timeout(gpointer user_data)
   int j;
   g_mutex_lock(&mutex);
   double *data = y_val_matrix_get_array(a);
-  for(j=0;j<y_matrix_get_rows(a)*y_matrix_get_columns(a);j++)
+  for(j=0;j<b_matrix_get_rows(a)*b_matrix_get_columns(a);j++)
       {
         data[j]=g_random_double();
       }
@@ -92,11 +92,11 @@ main (int argc, char *argv[])
 {
   g_mutex_init(&mutex);
   /* make a chain of derived data */
-  a = Y_MATRIX(y_val_matrix_new_alloc(700,500));
-  s = y_slice_operation_new(SLICE_ROW, 100, 1);
-  f = y_fft_operation_new (FFT_MAG);
-  b = Y_DERIVED_VECTOR(y_derived_vector_new(Y_DATA(a),s));
-  c = Y_DERIVED_VECTOR(y_derived_vector_new(Y_DATA(b),f));
+  a = B_MATRIX(b_val_matrix_new_alloc(700,500));
+  s = b_slice_operation_new(SLICE_ROW, 100, 1);
+  f = b_fft_operation_new (FFT_MAG);
+  b = B_DERIVED_VECTOR(b_derived_vector_new(B_DATA(a),s));
+  c = B_DERIVED_VECTOR(b_derived_vector_new(B_DATA(b),f));
 
   g_idle_add(start,NULL);
 

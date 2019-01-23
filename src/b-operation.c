@@ -1,5 +1,5 @@
 /*
- * y-operation.c :
+ * b-operation.c :
  *
  * Copyright (C) 2016 Scott O. Johnson (scojo202@gmail.com)
  *
@@ -20,34 +20,34 @@
  */
 
 #include <string.h>
-#include <y-operation.h>
-#include <data/y-data-simple.h>
+#include <b-operation.h>
+#include <data/b-data-simple.h>
 
 /**
- * SECTION: y-operation
+ * SECTION: b-operation
  * @short_description: Object representing operations
  *
- * YOperations are objects that take data and create other data automatically.
+ * BOperations are objects that take data and create other data automatically.
  *
  *
  */
 
-G_DEFINE_ABSTRACT_TYPE(YOperation, y_operation, G_TYPE_OBJECT);
+G_DEFINE_ABSTRACT_TYPE(BOperation, b_operation, G_TYPE_OBJECT);
 
-static void y_operation_init(YOperation * op)
+static void b_operation_init(BOperation * op)
 {
 }
 
-static void y_operation_class_init(YOperationClass * klass)
+static void b_operation_class_init(BOperationClass * klass)
 {
 }
 
-double *y_create_input_array_from_vector(YVector * input, gboolean is_new,
+double *b_create_input_array_from_vector(BVector * input, gboolean is_new,
 					 unsigned int old_size,
 					 double *old_input)
 {
 	double *d = old_input;
-	unsigned int size = y_vector_get_len(input);
+	unsigned int size = b_vector_get_len(input);
 	if (!is_new) {
 		if (old_size != size) {
 			g_free(old_input);
@@ -56,18 +56,18 @@ double *y_create_input_array_from_vector(YVector * input, gboolean is_new,
 	} else {
 		d = g_new(double, size);
 	}
-	memcpy(d, y_vector_get_values(input), size * sizeof(double));
+	memcpy(d, b_vector_get_values(input), size * sizeof(double));
 	return d;
 }
 
-double *y_create_input_array_from_matrix(YMatrix * input, gboolean is_new,
-					 YMatrixSize old_size,
+double *b_create_input_array_from_matrix(BMatrix * input, gboolean is_new,
+					 BMatrixSize old_size,
 					 double *old_input)
 {
 	double *d = old_input;
 	unsigned int old_nrow = old_size.rows;
 	unsigned int old_ncol = old_size.columns;
-	YMatrixSize size = y_matrix_get_size(input);
+	BMatrixSize size = b_matrix_get_size(input);
 	if(size.rows<1 || size.columns<1) {
 		return NULL;
 	}
@@ -82,53 +82,53 @@ double *y_create_input_array_from_matrix(YMatrix * input, gboolean is_new,
 	if(d==NULL) {
 		d = g_new(double, size.rows * size.columns);
 	}
-	g_assert(y_matrix_get_values(input));
-	memcpy(d, y_matrix_get_values(input),
+	g_assert(b_matrix_get_values(input));
+	memcpy(d, b_matrix_get_values(input),
 	       size.rows * size.columns * sizeof(double));
 	return d;
 }
 
 /**
- * y_data_new_from_operation :
- * @op: a #YOperation
+ * b_data_new_from_operation :
+ * @op: a #BOperation
  * @input: input data
  *
- * Create a new simple #YData from an operation and an input.
+ * Create a new simple #BData from an operation and an input.
  *
  * returns: the new data object.
  *
  **/
-YData *y_data_new_from_operation(YOperation *op, YData *input)
+BData *b_data_new_from_operation(BOperation *op, BData *input)
 {
-	g_assert(Y_IS_OPERATION(op));
-	g_assert(Y_IS_DATA(input));
-	YOperationClass *klass = Y_OPERATION_GET_CLASS (op);
-	gpointer data = y_operation_create_task_data(op,input);
+	g_assert(B_IS_OPERATION(op));
+	g_assert(B_IS_DATA(input));
+	BOperationClass *klass = B_OPERATION_GET_CLASS (op);
+	gpointer data = b_operation_create_task_data(op,input);
 	unsigned int dims[4];
 	int s = klass->op_size(op,input,dims);
 	gpointer output = klass->op_func(data);
 	if(output==NULL) return NULL;
-	YData *out = NULL;
+	BData *out = NULL;
 	if(s==0) {
 		double *d = (double *) output;
-		out = y_val_scalar_new(*d);
+		out = b_val_scalar_new(*d);
 		g_free(output);
 	}
 	else if(s==1) {
 		double *d = (double *) output;
-		out = y_val_vector_new(d,dims[0],g_free);
+		out = b_val_vector_new(d,dims[0],g_free);
 	}
 	else if(s==2) {
 		double *d = (double *) output;
-		out = y_val_matrix_new(d,dims[0],dims[1],g_free);
+		out = b_val_matrix_new(d,dims[0],dims[1],g_free);
 	}
 	klass->op_data_free(input);
 	return out;
 }
 
 /**
- * y_operation_get_task :
- * @op: a #YOperation
+ * b_operation_get_task :
+ * @op: a #BOperation
  * @user_data: task data
  * @cb: callback that will be called when task is complete
  * @cb_data: data for callback
@@ -138,7 +138,7 @@ YData *y_data_new_from_operation(YOperation *op, YData *input)
  * returns: (transfer none): the task
  *
  **/
-GTask *y_operation_get_task(YOperation * op, gpointer user_data,
+GTask *b_operation_get_task(BOperation * op, gpointer user_data,
 			    GAsyncReadyCallback cb, gpointer cb_data)
 {
 	GTask *task = g_task_new(op, NULL, cb, cb_data);
@@ -152,15 +152,15 @@ task_thread_func(GTask * task,
 		 gpointer source_object,
 		 gpointer task_data, GCancellable * cancellable)
 {
-	YOperation *op = (YOperation *) source_object;
-	YOperationClass *klass = Y_OPERATION_GET_CLASS(op);
+	BOperation *op = (BOperation *) source_object;
+	BOperationClass *klass = B_OPERATION_GET_CLASS(op);
 	gpointer output = klass->op_func(task_data);
 	g_task_return_pointer(task, output, NULL);
 }
 
 /**
- * y_operation_run_task :
- * @op: a #YOperation
+ * b_operation_run_task :
+ * @op: a #BOperation
  * @user_data: task data
  * @cb: callback that will be called when task is complete
  * @cb_data: data for callback
@@ -168,40 +168,40 @@ task_thread_func(GTask * task,
  * Get the #GTask for an operation and run it in a thread.
  *
  **/
-void y_operation_run_task(YOperation * op, gpointer user_data,
+void b_operation_run_task(BOperation * op, gpointer user_data,
 			  GAsyncReadyCallback cb, gpointer cb_data)
 {
-	GTask *task = y_operation_get_task(op, user_data, cb, cb_data);
+	GTask *task = b_operation_get_task(op, user_data, cb, cb_data);
 	g_task_run_in_thread(task, task_thread_func);
 	g_object_unref(task);
 }
 
 /**
- * y_operation_create_task_data:
- * @op: a #YOperation
- * @input: a #YData to serve as the input
+ * b_operation_create_task_data:
+ * @op: a #BOperation
+ * @input: a #BData to serve as the input
  *
  * Create a task data structure to be used to perform the operation for a given
  * input object. It will make a copy of the data in the input object, so if that
  * changes, the structure must be updated.
  **/
-gpointer y_operation_create_task_data(YOperation * op, YData * input)
+gpointer b_operation_create_task_data(BOperation * op, BData * input)
 {
-	YOperationClass *klass = Y_OPERATION_GET_CLASS(op);
+	BOperationClass *klass = B_OPERATION_GET_CLASS(op);
 	return klass->op_data(op, NULL, input);
 }
 
 /**
- * y_operation_update_task_data:
- * @op: a #YOperation
+ * b_operation_update_task_data:
+ * @op: a #BOperation
  * @task_data: a pointer to the task data
- * @input: a #YData to serve as the input
+ * @input: a #BData to serve as the input
  *
  * Update an existing task data structure, possibly for a new input object.
  **/
-void y_operation_update_task_data(YOperation * op, gpointer task_data,
-				  YData * input)
+void b_operation_update_task_data(BOperation * op, gpointer task_data,
+				  BData * input)
 {
-	YOperationClass *klass = Y_OPERATION_GET_CLASS(op);
+	BOperationClass *klass = B_OPERATION_GET_CLASS(op);
 	klass->op_data(op, task_data, input);
 }

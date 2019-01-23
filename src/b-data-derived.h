@@ -22,39 +22,39 @@
 #ifndef DATA_DERIVED_H
 #define DATA_DERIVED_H
 
-#include <data/y-data-class.h>
-#include <y-operation.h>
+#include <data/b-data-class.h>
+#include <b-operation.h>
 
 G_BEGIN_DECLS
 
-#define Y_TYPE_DERIVED (y_derived_get_type ())
+#define B_TYPE_DERIVED (b_derived_get_type ())
 
-G_DECLARE_INTERFACE (YDerived, y_derived, Y, DERIVED, YData)
+G_DECLARE_INTERFACE (BDerived, b_derived, B, DERIVED, BData)
 
-struct _YDerivedInterface
+struct _BDerivedInterface
 {
 	GTypeInterface parent;
 
-	void (*force_recalculate) (YDerived *self);
+	void (*force_recalculate) (BDerived *self);
 };
 
-G_DECLARE_FINAL_TYPE(YDerivedScalar,y_derived_scalar,Y,DERIVED_SCALAR,YScalar)
+G_DECLARE_FINAL_TYPE(BDerivedScalar,b_derived_scalar,B,DERIVED_SCALAR,BScalar)
 
-#define Y_TYPE_DERIVED_SCALAR  (y_derived_scalar_get_type ())
+#define B_TYPE_DERIVED_SCALAR  (b_derived_scalar_get_type ())
 
-YData	*y_derived_scalar_new      (YData *input, YOperation *op);
+BData	*b_derived_scalar_new      (BData *input, BOperation *op);
 
-G_DECLARE_FINAL_TYPE(YDerivedVector,y_derived_vector,Y,DERIVED_VECTOR,YVector)
+G_DECLARE_FINAL_TYPE(BDerivedVector,b_derived_vector,B,DERIVED_VECTOR,BVector)
 
-#define Y_TYPE_DERIVED_VECTOR  (y_derived_vector_get_type ())
+#define B_TYPE_DERIVED_VECTOR  (b_derived_vector_get_type ())
 
-YData	*y_derived_vector_new      (YData *input, YOperation *op);
+BData	*b_derived_vector_new      (BData *input, BOperation *op);
 
-G_DECLARE_FINAL_TYPE(YDerivedMatrix,y_derived_matrix,Y,DERIVED_MATRIX,YMatrix)
+G_DECLARE_FINAL_TYPE(BDerivedMatrix,b_derived_matrix,B,DERIVED_MATRIX,BMatrix)
 
-#define Y_TYPE_DERIVED_MATRIX  (y_derived_matrix_get_type ())
+#define B_TYPE_DERIVED_MATRIX  (b_derived_matrix_get_type ())
 
-YData	*y_derived_matrix_new      (YData *input, YOperation *op);
+BData	*b_derived_matrix_new      (BData *input, BOperation *op);
 
 G_END_DECLS
 

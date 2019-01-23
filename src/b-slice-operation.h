@@ -1,5 +1,5 @@
 /*
- * y-data.h :
+ * y-data-vector-slice.h :
  *
  * Copyright (C) 2016 Scott O. Johnson (scojo202@gmail.com)
  *
@@ -19,18 +19,33 @@
  * USA
  */
 
-#ifndef Y_EXTRAS_H
-#define Y_EXTRAS_H
+#ifndef DATA_VECTOR_SLICE_H
+#define DATA_VECTOR_SLICE_H
 
-#include <y-data-derived.h>
-#include <y-operation.h>
-#include <y-hdf.h>
-#include <y-simple-operation.h>
-#include <y-subset-operation.h>
-#include <y-slice-operation.h>
-#include <y-linear-range.h>
-#include <y-scalar-property.h>
-#include <y-vector-ring.h>
-#include <y-fft-operation.h>
+#include <data/b-data-class.h>
+#include <b-operation.h>
+
+G_BEGIN_DECLS
+
+G_DECLARE_FINAL_TYPE(BSliceOperation,b_slice_operation,B,SLICE_OPERATION,BOperation)
+
+#define B_TYPE_SLICE_OPERATION  (b_slice_operation_get_type ())
+
+enum {
+	SLICE_ROW = 0,
+	SLICE_COL = 1,
+	SLICE_SUMROWS = 2,
+	SLICE_SUMCOLS = 3
+};
+
+#define SLICE_ELEMENT SLICE_ROW
+#define SLICE_SUMELEMENTS SLICE_SUMROWS
+
+BOperation *b_slice_operation_new (int type, int index, int width);
+void b_slice_operation_set_pars(BSliceOperation *d, int type, int index,
+                                 int width);
+
+
+G_END_DECLS
 
 #endif
