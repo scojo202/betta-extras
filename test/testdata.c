@@ -29,48 +29,6 @@ test_range_vectors(void)
 }
 
 static void
-test_ring_vector(void)
-{
-  BRingVector *r = B_RING_VECTOR(b_ring_vector_new(100, 0, FALSE));
-  g_assert_cmpuint(0, ==, b_vector_get_len(B_VECTOR(r)));
-  int i;
-  for(i=0;i<10;i++) {
-    b_ring_vector_append(r,(double)i);
-  }
-  g_assert_cmpuint(10, ==, b_vector_get_len(B_VECTOR(r)));
-  for(i=0;i<10;i++) {
-    g_assert_cmpfloat((double)i, ==, b_vector_get_value(B_VECTOR(r),i));
-  }
-  g_assert_true(b_vector_is_varying_uniformly(B_VECTOR(r)));
-  b_ring_vector_set_length(r,5);
-  g_assert_cmpuint(5, ==, b_vector_get_len(B_VECTOR(r)));
-  g_object_unref(r);
-}
-
-static void
-test_ring_matrix(void)
-{
-  BRingMatrix *r = B_RING_MATRIX(b_ring_matrix_new(10,100, 0, FALSE));
-  g_assert_cmpuint(0, ==, b_matrix_get_rows(B_MATRIX(r)));
-  g_assert_cmpuint(10, ==, b_matrix_get_columns(B_MATRIX(r)));
-  int i;
-  double vals[10];
-  for(i=0;i<10;i++) {
-    vals[i]=(double)i;
-  }
-  for(i=0;i<10;i++) {
-    b_ring_matrix_append(r,vals,10);
-  }
-  g_assert_cmpuint(10, ==, b_matrix_get_rows(B_MATRIX(r)));
-  for(i=0;i<10;i++) {
-    g_assert_cmpfloat((double)i, ==, b_matrix_get_value(B_MATRIX(r),0,i));
-  }
-  b_ring_matrix_set_rows(r,5);
-  g_assert_cmpuint(5, ==, b_matrix_get_rows(B_MATRIX(r)));
-  g_object_unref(r);
-}
-
-static void
 test_property_scalar(void)
 {
   BOperation *op = b_slice_operation_new(SLICE_ROW, 50, 1);
@@ -238,8 +196,6 @@ main (int argc, char *argv[])
   g_test_init(&argc, &argv, NULL);
 
   g_test_add_func("/BData/range",test_range_vectors);
-  g_test_add_func("/BData/ring/vector",test_ring_vector);
-  g_test_add_func("/BData/ring/matrix",test_ring_matrix);
   g_test_add_func("/Bdata/property/scalar",test_property_scalar);
   g_test_add_func("/BData/derived/scalar/simple",test_derived_scalar_simple);
   g_test_add_func("/BData/derived/scalar/slice",test_derived_scalar_slice);

@@ -30,7 +30,6 @@
 #include <b-slice-operation.h>
 #include <b-linear-range.h>
 #include <b-scalar-property.h>
-#include <b-vector-ring.h>
 #include <b-fft-operation.h>
 
 #endif
