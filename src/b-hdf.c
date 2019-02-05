@@ -338,6 +338,8 @@ BData *b_vector_from_h5(hid_t group_id, const gchar * data_name)
 	H5Dread(dataset_h5, H5T_NATIVE_DOUBLE, H5S_ALL, dspace_id, H5P_DEFAULT,
 		d);
 	BData *y = b_val_vector_new(d, current_dims[0], g_free);
+	H5Sclose(dspace_id);
+	H5Dclose(dataset_h5);
 	return y;
 }
 
@@ -377,6 +379,8 @@ BData *b_matrix_from_h5(hid_t group_id, const gchar * data_name)
 		d);
 	BData *y =
 	    b_val_matrix_new(d, current_dims[0], current_dims[1], g_free);
+	H5Sclose(dspace_id);
+	H5Dclose(dataset_h5);
 	return y;
 }
 
@@ -411,5 +415,7 @@ void b_val_vector_replace_h5(BValVector * v, hid_t group_id,
 	double *d = g_new(double, current_dims[0]);
 	H5Dread(dataset_h5, H5T_NATIVE_DOUBLE, H5S_ALL, dspace_id, H5P_DEFAULT,
 		d);
+  H5Sclose(dspace_id);
+	H5Dclose(dataset_h5);
 	b_val_vector_replace_array(v, d, current_dims[0], g_free);
 }
