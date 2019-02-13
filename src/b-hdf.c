@@ -112,6 +112,13 @@ BFile * b_file_open_for_reading(const gchar *filename, GError **err)
                     "file not found: %s", filename);
 		return 0;
 	}
+	/* make sure file is not corrupted */
+	htri_t r = H5Fis_hdf5(filename);
+	if(r<=0) {
+	    g_set_error(err, G_IO_ERROR, G_IO_ERROR_FAILED,
+                    "file is not HDF5 format: %s", filename);
+		return 0;
+	}
 	hid_t hfile = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
 	BFile *f = g_object_new(B_TYPE_FILE,NULL);
 	f->handle = hfile;
