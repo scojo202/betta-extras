@@ -192,9 +192,10 @@ gpointer vector_slice_op_create_data(BOperation * op, gpointer data,
 	slice_size(op, input, dims);
 	if (d->output_len != dims[0]) {
 		if (d->output)
-			g_free(d->output);
-		d->output = g_new0(double, dims[0]);
-		d->output_len = dims[0];
+		  g_free(d->output);
+		d->output = g_try_new0(double, dims[0]);
+		if (d->output)
+		  d->output_len = dims[0];
 	}
 	return d;
 }
