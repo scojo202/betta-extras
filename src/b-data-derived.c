@@ -90,9 +90,7 @@ void finalize_derived(Derived *d) {
 		g_signal_handler_disconnect(d->input,d->handler);
 	}
 	/* unref matrix */
-	if(d->input!=NULL) {
-		g_object_unref(d->input);
-	}
+  g_clear_object(&d->input);
 	if (d->task_data) {
 		BOperationClass *klass =
         (BOperationClass *) G_OBJECT_GET_CLASS(d->op);
@@ -100,9 +98,7 @@ void finalize_derived(Derived *d) {
 			klass->op_data_free(d->task_data);
 		}
 	}
-	if (d->op) {
-		g_object_unref(d->op);
-	}
+  g_clear_object(&d->op);
 }
 
 static gboolean
@@ -672,9 +668,8 @@ static double *derived_matrix_load_values(BMatrix * vec)
 
 	if (vecs->currsize.rows != size.rows
 	    || vecs->currsize.columns != size.columns) {
-		if (vecs->cache)
-			g_free(vecs->cache);
-		v = g_new0(double, size.rows * size.columns);
+		g_clear_pointer(&vecs->cache,g_free);
+		v = g_try_new0(double, size.rows * size.columns);
 		vecs->currsize = size;
 		vecs->cache = v;
 	} else {

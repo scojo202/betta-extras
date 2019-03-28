@@ -135,6 +135,25 @@ test_derived_vector_slice(void)
 }
 
 static void
+test_derived_vector_slice_null(void)
+{
+  BOperation *op = b_slice_operation_new(SLICE_ROW, 50, 1);
+  BData *m = b_val_matrix_new_alloc(100,100);
+  double *d = b_val_matrix_get_array(B_VAL_MATRIX(m));
+  for (int i=0;i<100*100;i++) {
+    d[i]=(double)i;
+  }
+  BDerivedVector *v = B_DERIVED_VECTOR(b_derived_vector_new(NULL,op));
+  g_object_set(v,"input",m,NULL);
+  g_assert_cmpuint(100,==,b_vector_get_len(B_VECTOR(v)));
+  g_assert_cmpfloat(50*100+50, ==, b_vector_get_value(B_VECTOR(v),50));
+  d[50*100+50]=137.0;
+  b_data_emit_changed(m);
+  g_assert_cmpfloat(137.0, ==, b_vector_get_value(B_VECTOR(v),50));
+  g_object_unref(v);
+}
+
+static void
 test_derived_vector_subset(void)
 {
   BOperation *op = g_object_new(B_TYPE_SUBSET_OPERATION,"start1",5,"length1",20,NULL);
@@ -204,6 +223,7 @@ main (int argc, char *argv[])
   g_test_add_func("/BData/derived/vector/FFT/mag",test_derived_vector_FFT_mag);
   g_test_add_func("/BData/derived/vector/FFT/phase",test_derived_vector_FFT_phase);
   g_test_add_func("/BData/derived/vector/slice",test_derived_vector_slice);
+  g_test_add_func("/BData/derived/vector/slice/null",test_derived_vector_slice_null);
   g_test_add_func("/BData/derived/matrix/simple",test_derived_matrix_simple);
   g_test_add_func("/BData/derived/matrix/subset",test_derived_matrix_subset);
   int retval = g_test_run();

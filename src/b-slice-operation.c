@@ -176,8 +176,7 @@ gpointer vector_slice_op_create_data(BOperation * op, gpointer data,
 		d->size.columns = b_vector_get_len(vec);
 		d->size.rows = 0; /* special case for an input vector */
 		if (d->output_len != 1) {
-			if (d->output)
-				g_free(d->output);
+			g_clear_pointer(&d->output,g_free);
 			d->output = g_new0(double, 1);
 			d->output_len = 1;
 		}
@@ -191,21 +190,22 @@ gpointer vector_slice_op_create_data(BOperation * op, gpointer data,
 	unsigned int dims[2];
 	slice_size(op, input, dims);
 	if (d->output_len != dims[0]) {
-		if (d->output)
-		  g_free(d->output);
-		d->output = g_try_new0(double, dims[0]);
-		if (d->output)
-		  d->output_len = dims[0];
-	}
-	return d;
+    g_clear_pointer(&d->output,g_free);
+    d->output = g_try_new0(double, dims[0]);
+    if (d->output)
+      d->output_len = dims[0];
+    else
+      d->output_len = 0;
+  }
+  return d;
 }
 
 static
 void vector_slice_op_data_free(gpointer d)
 {
 	SliceOpData *s = (SliceOpData *) d;
-	g_free(s->input);
-	g_free(s->output);
+  g_clear_pointer(&s->input,g_free);
+  g_clear_pointer(&s->output,g_free);
 	g_free(d);
 }
 
