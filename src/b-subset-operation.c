@@ -129,8 +129,8 @@ int subset_size(BOperation * op, BData * input, unsigned int *dims)
 	    (sop->start2 + sop->length2 >
 	     size.rows) ? size.rows - sop->start2 : sop->length2;
 
-	dims[0] = real_length1;
-	dims[1] = real_length2;
+	dims[0] = real_length2;
+	dims[1] = real_length1;
 	n_dims = 2;
 
 	return n_dims;
