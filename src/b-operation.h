@@ -47,12 +47,12 @@ G_DECLARE_DERIVABLE_TYPE(BOperation,b_operation,B,OPERATION,GObject)
  **/
 
 struct _BOperationClass {
-	GObjectClass base;
-	gboolean thread_safe; /* does this operation keep copies of all data so it can be done in a thread? */
-	int (*op_size) (BOperation *op, BData *input, unsigned int *dims);
-	gpointer (*op_func) (gpointer data);
-	gpointer (*op_data) (BOperation *op, gpointer data, BData *input);
-	GDestroyNotify op_data_free;
+  GObjectClass base;
+  gboolean thread_safe; /* does this operation keep copies of all data so it can be done in a thread? */
+  int (*op_size) (BOperation *op, BData *input, unsigned int *dims);
+  gpointer (*op_func) (gpointer data);
+  gpointer (*op_data) (BOperation *op, gpointer data, BData *input);
+  GDestroyNotify op_data_free;
 };
 
 double *b_create_input_array_from_vector(BVector *input, gboolean is_new, unsigned int old_size, double *old_input);

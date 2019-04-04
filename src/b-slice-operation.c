@@ -34,21 +34,21 @@
  */
 
 enum {
-	SLICE_PROP_0,
-	SLICE_PROP_INDEX,
-	SLICE_PROP_TYPE,
-	SLICE_PROP_WIDTH,
-	SLICE_PROP_MEAN
+  SLICE_PROP_0,
+  SLICE_PROP_INDEX,
+  SLICE_PROP_TYPE,
+  SLICE_PROP_WIDTH,
+  SLICE_PROP_MEAN
 };
 
 struct _BSliceOperation {
-	BOperation base;
-	int index;
-	guchar type;
-	int width;
-	int index2;
-	int width2;
-	gboolean mean;
+  BOperation base;
+  int index;
+  guchar type;
+  int width;
+  int index2;
+  int width2;
+  gboolean mean;
 };
 
 G_DEFINE_TYPE(BSliceOperation, b_slice_operation, B_TYPE_OPERATION);
@@ -79,76 +79,75 @@ slice_operation_set_property(GObject * gobject, guint param_id,
 }
 
 static void
-slice_operation_get_property(GObject * gobject, guint param_id,
-			       GValue * value, GParamSpec * pspec)
+slice_operation_get_property(GObject * gobject, guint param_id, GValue * value,
+                             GParamSpec * pspec)
 {
-	BSliceOperation *sop = B_SLICE_OPERATION(gobject);
+  BSliceOperation *sop = B_SLICE_OPERATION(gobject);
 
-	switch (param_id) {
-	case SLICE_PROP_INDEX:
-		g_value_set_int(value, sop->index);
-		break;
-	case SLICE_PROP_TYPE:
-		g_value_set_int(value, sop->type);
-		break;
-	case SLICE_PROP_WIDTH:
-		g_value_set_int(value, sop->width);
-		break;
-	case SLICE_PROP_MEAN:
-		g_value_set_boolean(value, sop->mean);
-		break;
-	default:
-		G_OBJECT_WARN_INVALID_PROPERTY_ID(gobject, param_id, pspec);
-		return;		/* NOTE : RETURN */
-	}
+  switch (param_id) {
+  case SLICE_PROP_INDEX:
+    g_value_set_int(value, sop->index);
+    break;
+  case SLICE_PROP_TYPE:
+    g_value_set_int(value, sop->type);
+    break;
+  case SLICE_PROP_WIDTH:
+    g_value_set_int(value, sop->width);
+    break;
+  case SLICE_PROP_MEAN:
+    g_value_set_boolean(value, sop->mean);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID(gobject, param_id, pspec);
+    return;		/* NOTE : RETURN */
+  }
 }
 
 static
 int slice_size(BOperation * op, BData * input, unsigned int *dims)
 {
-	int n_dims = 0;
-	g_assert(dims);
-	BSliceOperation *sop = B_SLICE_OPERATION(op);
+  g_return_val_if_fail(B_IS_DATA(input),0);
+  int n_dims = 0;
+  g_assert(dims);
+  BSliceOperation *sop = B_SLICE_OPERATION(op);
 
-	g_assert(!B_IS_SCALAR(input));
-	g_assert(!B_IS_STRUCT(input));
+  g_assert(!B_IS_SCALAR(input));
+  g_assert(!B_IS_STRUCT(input));
 
-	if (B_IS_VECTOR(input)) {
-		if (sop->type == SLICE_ELEMENT
-		    || sop->type == SLICE_SUMELEMENTS) {
-			dims[0] = 1;
-		} else {
-			g_warning
-			    ("Only SLICE_ELEMENT supported for vector input.");
-		}
-		return n_dims;
-	}
+  if (B_IS_VECTOR(input)) {
+    if (sop->type == SLICE_ELEMENT || sop->type == SLICE_SUMELEMENTS) {
+      dims[0] = 1;
+    } else {
+      g_warning ("Only SLICE_ELEMENT supported for vector input.");
+    }
+    return n_dims;
+  }
 
-	BMatrix *mat = B_MATRIX(input);
+  BMatrix *mat = B_MATRIX(input);
 
-	if ((sop->type == SLICE_ROW) || (sop->type == SLICE_SUMROWS)) {
-		dims[0] = b_matrix_get_columns(mat);
-		dims[1] = 1;
-		n_dims = 1;
-	} else if ((sop->type == SLICE_COL) || (sop->type == SLICE_SUMCOLS)) {
-		dims[0] = b_matrix_get_rows(mat);
-		dims[1] = 1;
-		n_dims = 1;
-	} else {
-		dims[0] = 0;
-		dims[1] = 0;
-		n_dims = 1;
-	}
-	return n_dims;
+  if ((sop->type == SLICE_ROW) || (sop->type == SLICE_SUMROWS)) {
+    dims[0] = b_matrix_get_columns(mat);
+    dims[1] = 1;
+    n_dims = 1;
+  } else if ((sop->type == SLICE_COL) || (sop->type == SLICE_SUMCOLS)) {
+    dims[0] = b_matrix_get_rows(mat);
+    dims[1] = 1;
+    n_dims = 1;
+  } else {
+    dims[0] = 0;
+    dims[1] = 0;
+    n_dims = 1;
+  }
+  return n_dims;
 }
 
 typedef struct {
-	BSliceOperation sop;
-	GType input_type;
-	double *input;
-	BMatrixSize size;
-	double *output;
-	unsigned int output_len;
+  BSliceOperation sop;
+  GType input_type;
+  double *input;
+  BMatrixSize size;
+  double *output;
+  unsigned int output_len;
 } SliceOpData;
 
 static
@@ -203,10 +202,10 @@ gpointer vector_slice_op_create_data(BOperation * op, gpointer data,
 static
 void vector_slice_op_data_free(gpointer d)
 {
-	SliceOpData *s = (SliceOpData *) d;
+  SliceOpData *s = (SliceOpData *) d;
   g_clear_pointer(&s->input,g_free);
   g_clear_pointer(&s->output,g_free);
-	g_free(d);
+  g_free(d);
 }
 
 static
@@ -309,15 +308,15 @@ gpointer vector_slice_op(gpointer input)
 
 static void b_slice_operation_class_init(BSliceOperationClass * slice_klass)
 {
-	GObjectClass *gobject_klass = (GObjectClass *) slice_klass;
-	gobject_klass->set_property = slice_operation_set_property;
-	gobject_klass->get_property = slice_operation_get_property;
-	BOperationClass *op_klass = (BOperationClass *) slice_klass;
-	op_klass->thread_safe = TRUE;
-	op_klass->op_size = slice_size;
-	op_klass->op_func = vector_slice_op;
-	op_klass->op_data = vector_slice_op_create_data;
-	op_klass->op_data_free = vector_slice_op_data_free;
+  GObjectClass *gobject_klass = (GObjectClass *) slice_klass;
+  gobject_klass->set_property = slice_operation_set_property;
+  gobject_klass->get_property = slice_operation_get_property;
+  BOperationClass *op_klass = (BOperationClass *) slice_klass;
+  op_klass->thread_safe = TRUE;
+  op_klass->op_size = slice_size;
+  op_klass->op_func = vector_slice_op;
+  op_klass->op_data = vector_slice_op_create_data;
+  op_klass->op_data_free = vector_slice_op_data_free;
 
 	g_object_class_install_property(gobject_klass, SLICE_PROP_INDEX,
 					g_param_spec_int("index", "Index",
@@ -349,9 +348,8 @@ static void b_slice_operation_class_init(BSliceOperationClass * slice_klass)
 
 static void b_slice_operation_init(BSliceOperation * slice)
 {
-	g_assert(B_IS_SLICE_OPERATION(slice));
-	slice->type = SLICE_ROW;
-	slice->width = 1;
+  slice->type = SLICE_ROW;
+  slice->width = 1;
 }
 
 /**
@@ -366,14 +364,13 @@ static void b_slice_operation_init(BSliceOperation * slice)
  **/
 BOperation *b_slice_operation_new(int type, int index, int width)
 {
-	g_assert(index >= 0);
-	g_assert(width >= -1);
+  g_return_val_if_fail(index >= 0, NULL);
+  g_return_val_if_fail(width >= -1, NULL);
 
-	BOperation *o =
-	    g_object_new(B_TYPE_SLICE_OPERATION, "type", type, "index", index,
-			 "width", width, NULL);
+  BOperation *o = g_object_new(B_TYPE_SLICE_OPERATION, "type", type,
+                               "index", index, "width", width, NULL);
 
-	return o;
+  return o;
 }
 
 /**
@@ -388,13 +385,13 @@ BOperation *b_slice_operation_new(int type, int index, int width)
 void b_slice_operation_set_pars(BSliceOperation * d, int type, int index,
 				int width)
 {
-	g_assert(B_IS_SLICE_OPERATION(d));
-	g_assert(index >= 0);
-	g_assert(width >= -1);
-	if (d->type != type)
-		g_object_set(d, "type", type, NULL);
-	if (d->index != index)
-		g_object_set(d, "index", index, NULL);
-	if (d->width != width)
-		g_object_set(d, "width", width, NULL);
+  g_return_if_fail(B_IS_SLICE_OPERATION(d));
+  g_return_if_fail(index >= 0);
+  g_return_if_fail(width >= -1);
+  if (d->type != type)
+    g_object_set(d, "type", type, NULL);
+  if (d->index != index)
+    g_object_set(d, "index", index, NULL);
+  if (d->width != width)
+    g_object_set(d, "width", width, NULL);
 }

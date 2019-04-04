@@ -79,13 +79,13 @@ double *b_create_input_array_from_matrix(BMatrix * input, gboolean is_new,
   } else {
     d = g_try_new(double, size.rows * size.columns);
   }
-	if(d==NULL) {
-		d = g_try_new(double, size.rows * size.columns);
-	}
-	g_assert(b_matrix_get_values(input));
-	memcpy(d, b_matrix_get_values(input),
-	       size.rows * size.columns * sizeof(double));
-	return d;
+  if(d==NULL) {
+    d = g_try_new(double, size.rows * size.columns);
+  }
+  g_assert(b_matrix_get_values(input));
+  memcpy(d, b_matrix_get_values(input),
+         size.rows * size.columns * sizeof(double));
+  return d;
 }
 
 /**
@@ -100,30 +100,30 @@ double *b_create_input_array_from_matrix(BMatrix * input, gboolean is_new,
  **/
 BData *b_data_new_from_operation(BOperation *op, BData *input)
 {
-	g_assert(B_IS_OPERATION(op));
-	g_assert(B_IS_DATA(input));
-	BOperationClass *klass = B_OPERATION_GET_CLASS (op);
-	gpointer data = b_operation_create_task_data(op,input);
-	unsigned int dims[4];
-	int s = klass->op_size(op,input,dims);
-	gpointer output = klass->op_func(data);
-	if(output==NULL) return NULL;
-	BData *out = NULL;
-	if(s==0) {
-		double *d = (double *) output;
-		out = b_val_scalar_new(*d);
-		g_free(output);
-	}
-	else if(s==1) {
-		double *d = (double *) output;
-		out = b_val_vector_new(d,dims[0],g_free);
-	}
-	else if(s==2) {
-		double *d = (double *) output;
-		out = b_val_matrix_new(d,dims[0],dims[1],g_free);
-	}
-	klass->op_data_free(input);
-	return out;
+  g_assert(B_IS_OPERATION(op));
+  g_assert(B_IS_DATA(input));
+  BOperationClass *klass = B_OPERATION_GET_CLASS (op);
+  gpointer data = b_operation_create_task_data(op,input);
+  unsigned int dims[4];
+  int s = klass->op_size(op,input,dims);
+  gpointer output = klass->op_func(data);
+  if(output==NULL) return NULL;
+  BData *out = NULL;
+  if(s==0) {
+    double *d = (double *) output;
+    out = b_val_scalar_new(*d);
+    g_free(output);
+  }
+  else if(s==1) {
+    double *d = (double *) output;
+    out = b_val_vector_new(d,dims[0],g_free);
+  }
+  else if(s==2) {
+    double *d = (double *) output;
+    out = b_val_matrix_new(d,dims[0],dims[1],g_free);
+  }
+  klass->op_data_free(input);
+  return out;
 }
 
 /**
@@ -141,6 +141,7 @@ BData *b_data_new_from_operation(BOperation *op, BData *input)
 GTask *b_operation_get_task(BOperation * op, gpointer user_data,
                             GAsyncReadyCallback cb, gpointer cb_data)
 {
+  g_return_val_if_fail(B_IS_OPERATION(op),NULL);
   GTask *task = g_task_new(op, NULL, cb, cb_data);
 
   g_task_set_task_data(task, user_data, NULL);
@@ -170,6 +171,7 @@ task_thread_func(GTask * task, gpointer source_object,
 void b_operation_run_task(BOperation * op, gpointer user_data,
                           GAsyncReadyCallback cb, gpointer cb_data)
 {
+  g_return_if_fail(B_IS_OPERATION(op));
   GTask *task = b_operation_get_task(op, user_data, cb, cb_data);
   g_task_run_in_thread(task, task_thread_func);
   g_object_unref(task);
@@ -186,6 +188,8 @@ void b_operation_run_task(BOperation * op, gpointer user_data,
  **/
 gpointer b_operation_create_task_data(BOperation * op, BData * input)
 {
+  g_return_val_if_fail(B_IS_OPERATION(op),NULL);
+  g_return_val_if_fail(B_IS_DATA(input),NULL);
   BOperationClass *klass = B_OPERATION_GET_CLASS(op);
   return klass->op_data(op, NULL, input);
 }
@@ -201,6 +205,8 @@ gpointer b_operation_create_task_data(BOperation * op, BData * input)
 void b_operation_update_task_data(BOperation * op, gpointer task_data,
                                   BData * input)
 {
+  g_return_if_fail(B_IS_OPERATION(op));
+  g_return_if_fail(B_IS_DATA(input));
   BOperationClass *klass = B_OPERATION_GET_CLASS(op);
   klass->op_data(op, task_data, input);
 }

@@ -112,6 +112,19 @@ derived_get_property(Derived *d, guint property_id, GValue * value)
   return found;
 }
 
+static void derived_set_input(Derived *d, BData *new_d)
+{
+  if(new_d != d->input) {
+    if(d->input!=NULL)
+      g_signal_handler_disconnect(d->input,d->handler);
+    g_clear_object(&d->input);
+    d->input = new_d;
+    g_object_ref_sink(d->input);
+  }
+}
+
+/*****************/
+
 struct _BDerivedScalar {
   BScalar base;
   double cache;
@@ -170,6 +183,8 @@ scalar_op_cb(GObject * source_object, GAsyncResult * res, gpointer user_data)
 
 static void scalar_on_input_changed(BData * data, gpointer user_data)
 {
+  g_return_if_fail(B_IS_DATA(data));
+  g_return_if_fail(B_IS_DERIVED_SCALAR(user_data));
   BDerivedScalar *d = B_DERIVED_SCALAR(user_data);
   if (!d->der.autorun) {
     b_data_emit_changed(B_DATA(d));
@@ -219,10 +234,12 @@ y_scalar_derived_set_property(GObject * object, guint property_id,
     s->der.autorun = g_value_get_boolean(value);
     break;
   case PROP_INPUT:
-    s->der.input = g_value_get_object(value);
-    g_signal_connect(s->der.input, "changed",
+    derived_set_input(&s->der, g_value_get_object(value));
+    if(s->der.input) {
+      g_signal_connect(s->der.input, "changed",
                      G_CALLBACK(scalar_on_input_changed), s);
-    b_data_emit_changed(B_DATA(s));
+      b_data_emit_changed(B_DATA(s));
+    }
     break;
   case PROP_OPERATION:
     s->der.op = g_value_get_object(value);
@@ -395,6 +412,8 @@ op_cb(GObject * source_object, GAsyncResult * res, gpointer user_data)
 
 static void on_input_changed_after(BData * data, gpointer user_data)
 {
+  g_return_if_fail(B_IS_DATA(data));
+  g_return_if_fail(B_IS_DERIVED_VECTOR(user_data));
   BDerivedVector *d = B_DERIVED_VECTOR(user_data);
   /* if shape changed, adjust length */
   /* FIXME: this just loads the length every time */
@@ -439,15 +458,12 @@ b_derived_vector_set_property(GObject * object, guint property_id,
     d->autorun = g_value_get_boolean(value);
     break;
   case PROP_INPUT:
-    /* unref old one */
-    if(d->input != NULL) {
-      g_object_unref(d->input);
+    derived_set_input(&v->der, g_value_get_object(value));
+    if(d->input) {
+      d->handler = g_signal_connect(d->input, "changed",
+                                    G_CALLBACK(on_input_changed_after), v);
+      b_data_emit_changed(B_DATA(v));
     }
-    d->input = g_value_get_object(value);
-    g_object_ref_sink(d->input);
-    d->handler = g_signal_connect(d->input, "changed",
-                                  G_CALLBACK(on_input_changed_after), v);
-    b_data_emit_changed(B_DATA(v));
     break;
   case PROP_OPERATION:
     d->op = g_value_dup_object(value);
@@ -632,6 +648,8 @@ op_cb2(GObject * source_object, GAsyncResult * res, gpointer user_data)
 
 static void on_input_changed_after2(BData * data, gpointer user_data)
 {
+  g_return_if_fail(B_IS_DATA(data));
+  g_return_if_fail(B_IS_DERIVED_MATRIX(user_data));
   BDerivedMatrix *d = B_DERIVED_MATRIX(user_data);
   /* if shape changed, adjust length */
   /* FIXME: this just loads the length every time */
@@ -675,30 +693,29 @@ b_derived_matrix_set_property(GObject * object, guint property_id,
   case PROP_AUTORUN:
     d->autorun = g_value_get_boolean(value);
     break;
-	case PROP_INPUT:
-		d->input = g_value_get_object(value);
-		d->input = g_object_ref_sink(d->input);
-		g_signal_connect(d->input, "changed",
-				 G_CALLBACK(on_input_changed_after2), v);
-		b_data_emit_changed(B_DATA(v));
-		break;
-	case PROP_OPERATION:
-		d->op = g_value_get_object(value);
-		/* listen to "notify" from op for property changes */
-		g_signal_connect(d->op, "notify", G_CALLBACK(on_op_changed2),
-				 v);
-		break;
-	default:
-		/* We don't have any other property... */
-		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
-		break;
-	}
+  case PROP_INPUT:
+    derived_set_input(&v->der, g_value_get_object(value));
+    if(d->input) {
+      g_signal_connect(d->input, "changed",
+                       G_CALLBACK(on_input_changed_after2), v);
+      b_data_emit_changed(B_DATA(v));
+    }
+    break;
+  case PROP_OPERATION:
+    d->op = g_value_get_object(value);
+    /* listen to "notify" from op for property changes */
+    g_signal_connect(d->op, "notify", G_CALLBACK(on_op_changed2), v);
+    break;
+  default:
+    /* We don't have any other property... */
+    G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+    break;
+  }
 }
 
 static void
-b_derived_matrix_get_property(GObject * object,
-			      guint property_id,
-			      GValue * value, GParamSpec * pspec)
+b_derived_matrix_get_property(GObject * object, guint property_id,
+                              GValue * value, GParamSpec * pspec)
 {
   BDerivedMatrix *v = B_DERIVED_MATRIX(object);
 
