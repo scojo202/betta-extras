@@ -31,5 +31,6 @@
 #include <b-linear-range.h>
 #include <b-scalar-property.h>
 #include <b-fft-operation.h>
+#include <b-image.h>
 
 #endif

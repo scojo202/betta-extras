@@ -33,8 +33,8 @@ src_public_sources += [
 bextras_deps = [libgobj_dep, libgio_dep, libbetta_dep, fftw_dep, libm, hdf5]
 
 if aravis_dep.found()
-  src_public_headers+=['b-arv-image-source.h']
-  src_public_sources+=['b-arv-image-source.c']
+  src_public_headers+=['b-arv-source.h','b-camera-settings-grid.h']
+  src_public_sources+=['b-arv-source.c','b-camera-settings-grid.c']
   bextras_deps += aravis_dep
 endif
 

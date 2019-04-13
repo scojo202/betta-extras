@@ -2,7 +2,7 @@
 #include <string.h>
 #include "b-arv-image-source.h"
 
-struct _BArvImageSource {
+struct _BArvSource {
   BData parent;
   ArvStream *stream;
   BImage *frame;
@@ -23,12 +23,12 @@ enum
 
 static GParamSpec *obj_properties[N_PROPERTIES] = { NULL, };
 
-G_DEFINE_TYPE(BArvImageSource, b_arv_image_source, B_TYPE_DATA)
+G_DEFINE_TYPE(BArvSource, b_arv_source, B_TYPE_DATA)
 
 static void
-arv_image_source_emit_changed (BData *data)
+arv_source_emit_changed (BData *data)
 {
-  BArvImageSource *image = (BArvImageSource *) data;
+  BArvSource *image = (BArvSource *) data;
   if(image->frame == NULL) {
     image->frame = b_image_new(2, image->nrow, image->ncol);
   }
@@ -52,7 +52,7 @@ emit_changed(gpointer data)
 static
 void frame_ready(ArvStream *stream, gpointer user_data) {
   g_return_if_fail(user_data !=NULL);
-  BArvImageSource *image = B_ARV_IMAGE_SOURCE(user_data);
+  BArvSource *image = B_ARV_SOURCE(user_data);
   ArvBuffer *buffer = arv_stream_try_pop_buffer (stream);
   if (buffer != NULL) {
     /* Image processing here */
@@ -88,9 +88,9 @@ void frame_ready(ArvStream *stream, gpointer user_data) {
 }
 
 static void
-arv_image_source_finalize(GObject *object)
+arv_source_finalize(GObject *object)
 {
-  BArvImageSource *im = B_ARV_IMAGE_SOURCE (object);
+  BArvSource *im = B_ARV_SOURCE (object);
 
   arv_stream_set_emit_signals(im->stream, FALSE);
 
@@ -99,12 +99,12 @@ arv_image_source_finalize(GObject *object)
 }
 
 static void
-arv_image_source_set_property (GObject      *object,
+arv_source_set_property (GObject      *object,
                         guint         property_id,
                         const GValue *value,
                         GParamSpec   *pspec)
 {
-  BArvImageSource *im = B_ARV_IMAGE_SOURCE (object);
+  BArvSource *im = B_ARV_SOURCE (object);
 
   switch (property_id)
     {
@@ -122,12 +122,12 @@ arv_image_source_set_property (GObject      *object,
 }
 
 static void
-arv_image_source_get_property (GObject    *object,
+arv_source_get_property (GObject    *object,
                         guint       property_id,
                         GValue     *value,
                         GParamSpec *pspec)
 {
-  BArvImageSource *im= B_ARV_IMAGE_SOURCE (object);
+  BArvSource *im= B_ARV_SOURCE (object);
 
   switch (property_id)
     {
@@ -141,16 +141,16 @@ arv_image_source_get_property (GObject    *object,
     }
 }
 
-static void b_arv_image_source_class_init(BArvImageSourceClass * klass)
+static void b_arv_source_class_init(BArvSourceClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   BDataClass *data_class = (BDataClass *) klass;
 
-  gobject_class->set_property = arv_image_source_set_property;
-  gobject_class->get_property = arv_image_source_get_property;
-  gobject_class->finalize = arv_image_source_finalize;
+  gobject_class->set_property = arv_source_set_property;
+  gobject_class->get_property = arv_source_get_property;
+  gobject_class->finalize = arv_source_finalize;
 
-  data_class->emit_changed = arv_image_source_emit_changed;
+  data_class->emit_changed = arv_source_emit_changed;
 
   obj_properties[PROP_STREAM] =
     g_param_spec_object ("stream",
@@ -164,17 +164,17 @@ static void b_arv_image_source_class_init(BArvImageSourceClass * klass)
                                      obj_properties);
 }
 
-static void b_arv_image_source_init(BArvImageSource * self)
+static void b_arv_source_init(BArvSource * self)
 {
   g_mutex_init(&self->dmut);
 }
 
-BImage *b_arv_image_source_get_frame(BArvImageSource *mat)
+BImage *b_arv_source_get_frame(BArvSource *mat)
 {
   return mat->frame;
 }
 
-BImage *b_arv_image_source_copy_frame(BArvImageSource *image)
+BImage *b_arv_source_copy_frame(BArvSource *image)
 {
   g_mutex_lock(&image->dmut);
   BImage *f2 = b_image_copy(image->frame);
@@ -182,11 +182,11 @@ BImage *b_arv_image_source_copy_frame(BArvImageSource *image)
   return f2;
 }
 
-BMatrixSize b_arv_image_source_get_size    (BArvImageSource *mat)
+BMatrixSize b_arv_source_get_size    (BArvSource *mat)
 {
   BMatrixSize s;
 
-  g_assert(B_IS_ARV_IMAGE_SOURCE(mat));
+  g_assert(B_IS_ARV_SOURCE(mat));
 
   s.rows = mat->nrow;
   s.columns = mat->ncol;
@@ -194,27 +194,27 @@ BMatrixSize b_arv_image_source_get_size    (BArvImageSource *mat)
   return s;
 }
 
-guint16	*b_arv_image_source_get_values (BArvImageSource *mat)
+guint16	*b_arv_source_get_values (BArvSource *mat)
 {
-  g_assert(B_IS_ARV_IMAGE_SOURCE(mat));
+  g_assert(B_IS_ARV_SOURCE(mat));
   g_mutex_lock(&mat->dmut);
   guint16 *n = g_memdup(mat->data,sizeof(guint16)*mat->nrow*mat->ncol);
   g_mutex_unlock(&mat->dmut);
   return n;
 }
 
-guint16 b_arv_image_source_get_value  (BArvImageSource *mat, unsigned i, unsigned j)
+guint16 b_arv_source_get_value  (BArvSource *mat, unsigned i, unsigned j)
 {
   g_assert(B_IS_ARV_IMAGE_SOURCE(mat));
   return mat->data[mat->ncol*i+j];
 }
 
-void b_arv_image_source_get_minmax (BArvImageSource *mat, guint16 *min, guint16 *max)
+void b_arv_source_get_minmax (BArvSource *mat, guint16 *min, guint16 *max)
 {
   int i;
   guint16 mx=0;
   guint16 mn=65535;
-  g_assert(B_IS_ARV_IMAGE_SOURCE(mat));
+  g_assert(B_IS_ARV_SOURCE(mat));
   g_mutex_lock(&mat->dmut);
   for(i=0;i<mat->nrow*mat->ncol;i++) {
     if(mat->data[i]>mx) mx = mat->data[i];
