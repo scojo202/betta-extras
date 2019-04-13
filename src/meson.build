@@ -1,5 +1,7 @@
 src_header_subdir = join_paths('b-extras','src')
 
+bextras_resource = gnome.compile_resources('betta-extras resources','b-extras.gresource.xml', source_dir: '.')
+
 src_public_headers = []
 src_public_sources = []
 
@@ -15,6 +17,7 @@ src_public_headers += [
   'b-simple-operation.h',
   'b-subset-operation.h',
   'b-image.h',
+  'b-camera-settings-grid.h'
 ]
 
 src_public_sources += [
@@ -27,7 +30,8 @@ src_public_sources += [
   'b-fft-operation.c',
   'b-simple-operation.c',
   'b-subset-operation.c',
-  'b-image.c'
+  'b-image.c',
+  'b-camera-settings-grid.c'
 ]
 
 bextras_deps = [libgobj_dep, libgio_dep, libbetta_dep, fftw_dep, libm, hdf5]
@@ -40,7 +44,7 @@ endif
 
 install_headers(src_public_headers,subdir: 'libbextras-0.2')
 
-libbextras = shared_library('bextras-0.2',src_public_sources, dependencies: bextras_deps, install: true, install_dir: get_option('libdir'))
+libbextras = shared_library('bextras-0.2',src_public_sources + bextras_resource, dependencies: bextras_deps, install: true, install_dir: get_option('libdir'))
 
 libbextras_dep = declare_dependency(dependencies: bextras_deps, link_with: libbextras, include_directories: include_directories('.'),)
 
@@ -55,7 +59,7 @@ pkgg.generate(
          name: 'b-extras',
      filebase: 'b-extras-0.2',
   description: 'BExtras',
-     requires: [ 'glib-2.0', 'gobject-2.0', 'gio-2.0', 'libbetta-0.2', 'fftw3'],
+     requires: [ 'glib-2.0', 'gobject-2.0', 'gio-2.0', 'libbetta-0.2', 'fftw3', 'aravis-0.6'],
   install_dir: join_paths(get_option('libdir'), 'pkgconfig'),
 )
 

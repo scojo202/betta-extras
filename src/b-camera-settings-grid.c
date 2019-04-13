@@ -20,7 +20,7 @@ b_camera_settings_grid_class_init (BCameraSettingsGridClass *klass)
 
   //object_class->finalize = grid_finalize;
 
-  gtk_widget_class_set_template_from_resource(GTK_WIDGET_CLASS (klass), "/com/github/scojo202/betta/camera-settings-grid.ui");
+  gtk_widget_class_set_template_from_resource(GTK_WIDGET_CLASS (klass), "/com/github/scojo202/betta/b-camera-settings-grid.ui");
   gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS (klass), BCameraSettingsGrid, exposure_sb);
   gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS (klass), BCameraSettingsGrid, frame_rate_sb);
   gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS (klass), BCameraSettingsGrid, external_trigger_button);

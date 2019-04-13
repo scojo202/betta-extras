@@ -18,6 +18,10 @@ conf.set_quoted('PACKAGE_NAME', 'b-extras')
 
 add_project_arguments('-Wall', language : 'c')
 
+if aravis_dep.found()
+add_global_arguments('-DARAVIS', language : 'c')
+endif
+
 if get_option('enable-introspection')
   gir = find_program('g-ir-scanner', required: false)
   if get_option('default_library') == 'shared'

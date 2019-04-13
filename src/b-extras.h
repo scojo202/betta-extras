@@ -32,5 +32,9 @@
 #include <b-scalar-property.h>
 #include <b-fft-operation.h>
 #include <b-image.h>
+#ifdef ARAVIS
+#include <b-arv-source.h>
+#include <b-camera-settings-grid.h>
+#endif
 
 #endif

@@ -1,6 +1,6 @@
 #include <b-data.h>
 #include <string.h>
-#include "b-arv-image-source.h"
+#include "b-arv-source.h"
 
 struct _BArvSource {
   BData parent;
@@ -205,7 +205,7 @@ guint16	*b_arv_source_get_values (BArvSource *mat)
 
 guint16 b_arv_source_get_value  (BArvSource *mat, unsigned i, unsigned j)
 {
-  g_assert(B_IS_ARV_IMAGE_SOURCE(mat));
+  g_assert(B_IS_ARV_SOURCE(mat));
   return mat->data[mat->ncol*i+j];
 }
 
