@@ -74,7 +74,7 @@ void frame_ready(ArvStream *stream, gpointer user_data) {
           if(image->data!=NULL)
             g_free(image->data);
           image->data = g_malloc0(sizeof(guint16)*image->nrow*image->ncol);
-          image->frame = frame_new(image->nrow, image->ncol);
+          image->frame = b_image_new(2,image->nrow, image->ncol);
         }
         for(i=0;i<image->nrow*image->ncol;i++) {
           image->data[i]=(guint16) b[i];
@@ -141,7 +141,7 @@ arv_image_source_get_property (GObject    *object,
     }
 }
 
-static void arv_image_source_class_init(BArvImageSourceClass * klass)
+static void b_arv_image_source_class_init(BArvImageSourceClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   BDataClass *data_class = (BDataClass *) klass;
@@ -164,7 +164,7 @@ static void arv_image_source_class_init(BArvImageSourceClass * klass)
                                      obj_properties);
 }
 
-static void arv_image_source_init(BArvImageSource * self)
+static void b_arv_image_source_init(BArvImageSource * self)
 {
   g_mutex_init(&self->dmut);
 }
@@ -177,7 +177,7 @@ BImage *b_arv_image_source_get_frame(BArvImageSource *mat)
 BImage *b_arv_image_source_copy_frame(BArvImageSource *image)
 {
   g_mutex_lock(&image->dmut);
-  BImage *f2 = frame_copy(image->frame);
+  BImage *f2 = b_image_copy(image->frame);
   g_mutex_unlock(&image->dmut);
   return f2;
 }
@@ -205,7 +205,7 @@ guint16	*b_arv_image_source_get_values (BArvImageSource *mat)
 
 guint16 b_arv_image_source_get_value  (BArvImageSource *mat, unsigned i, unsigned j)
 {
-  g_assert(_ISB_ARV_IMAGE_SOURCE(mat));
+  g_assert(B_IS_ARV_IMAGE_SOURCE(mat));
   return mat->data[mat->ncol*i+j];
 }
 
@@ -214,7 +214,7 @@ void b_arv_image_source_get_minmax (BArvImageSource *mat, guint16 *min, guint16 
   int i;
   guint16 mx=0;
   guint16 mn=65535;
-  g_assert(_ISB_ARV_IMAGE_SOURCE(mat));
+  g_assert(B_IS_ARV_IMAGE_SOURCE(mat));
   g_mutex_lock(&mat->dmut);
   for(i=0;i<mat->nrow*mat->ncol;i++) {
     if(mat->data[i]>mx) mx = mat->data[i];

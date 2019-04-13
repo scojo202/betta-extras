@@ -30,14 +30,15 @@ src_public_sources += [
   'b-image.c'
 ]
 
+bextras_deps = [libgobj_dep, libgio_dep, libbetta_dep, fftw_dep, libm, hdf5]
+
 if aravis_dep.found()
   src_public_headers+=['b-arv-image-source.h']
   src_public_sources+=['b-arv-image-source.c']
+  bextras_deps += aravis_dep
 endif
 
 install_headers(src_public_headers,subdir: 'libbextras-0.2')
-
-bextras_deps = [libgobj_dep, libgio_dep, libbetta_dep, fftw_dep, libm, hdf5]
 
 libbextras = shared_library('bextras-0.2',src_public_sources, dependencies: bextras_deps, install: true, install_dir: get_option('libdir'))
 

@@ -2,7 +2,7 @@
 
 #include <b-data.h>
 #include <arv.h>
-#include "b-frame.h"
+#include "b-image.h"
 
 G_BEGIN_DECLS
 
@@ -19,4 +19,3 @@ void b_arv_image_source_get_minmax (BArvImageSource *mat, guint16 *min, guint16 
 
 G_END_DECLS
 
-#endif
