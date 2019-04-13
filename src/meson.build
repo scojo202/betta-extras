@@ -13,7 +13,8 @@ src_public_headers += [
   'b-hdf.h',
   'b-fft-operation.h',
   'b-simple-operation.h',
-  'b-subset-operation.h'
+  'b-subset-operation.h',
+  'b-image.h',
 ]
 
 src_public_sources += [
@@ -25,8 +26,14 @@ src_public_sources += [
   'b-hdf.c',
   'b-fft-operation.c',
   'b-simple-operation.c',
-  'b-subset-operation.c'
+  'b-subset-operation.c',
+  'b-image.c'
 ]
+
+if aravis_dep.found()
+  src_public_headers+=['b-arv-image-source.h']
+  src_public_sources+=['b-arv-image-source.c']
+endif
 
 install_headers(src_public_headers,subdir: 'libbextras-0.2')
 
