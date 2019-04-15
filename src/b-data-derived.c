@@ -1,5 +1,5 @@
 /*
- * y-data-derived.c :
+ * b-data-derived.c :
  *
  * Copyright (C) 2016-2017 Scott O. Johnson (scojo202@gmail.com)
  *
