@@ -25,6 +25,7 @@
 
 struct _BArvSource {
   BData parent;
+  ArvCamera *camera;
   ArvStream *stream;
   BImage *frame;
   guint16 *data;
@@ -38,6 +39,7 @@ struct _BArvSource {
 enum
 {
   PROP_0,
+  PROP_CAMERA,
   PROP_STREAM,
   N_PROPERTIES
 };
@@ -129,6 +131,9 @@ arv_source_set_property (GObject      *object,
 
   switch (property_id)
     {
+    case PROP_CAMERA:
+      im->camera = g_value_dup_object (value);
+      break;
     case PROP_STREAM:
       im->stream = g_value_dup_object(value);
       /* set up signals */
@@ -152,6 +157,9 @@ arv_source_get_property (GObject    *object,
 
   switch (property_id)
     {
+    case PROP_CAMERA:
+      g_value_set_object (value, im->camera);
+      break;
     case PROP_STREAM:
       g_value_set_object (value, im->stream);
       break;
@@ -172,6 +180,13 @@ static void b_arv_source_class_init(BArvSourceClass * klass)
   gobject_class->finalize = arv_source_finalize;
 
   data_class->emit_changed = arv_source_emit_changed;
+
+  obj_properties[PROP_CAMERA] = 
+    g_param_spec_object ("camera", 
+                         "Camera", 
+                         "Camera object", 
+                         ARV_TYPE_CAMERA, 
+                         G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
 
   obj_properties[PROP_STREAM] =
     g_param_spec_object ("stream",
