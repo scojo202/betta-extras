@@ -200,12 +200,11 @@
       </packing>
     </child>
     <child>
-      <object class="GtkButton">
+      <object class="GtkButton" id="use_full_region_button">
         <property name="label" translatable="yes">Use full region</property>
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
-        <property name="action_name">win.use_full_region</property>
       </object>
       <packing>
         <property name="left_attach">7</property>
@@ -213,12 +212,11 @@
       </packing>
     </child>
     <child>
-      <object class="GtkButton">
+      <object class="GtkButton" id="set_region_button">
         <property name="label" translatable="yes">Set region</property>
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
-        <property name="action_name">win.set_region</property>
       </object>
       <packing>
         <property name="left_attach">5</property>

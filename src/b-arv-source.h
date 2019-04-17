@@ -37,5 +37,6 @@ BImage *b_arv_source_copy_frame(BArvSource *mat);
 guint16 *b_arv_source_get_values (BArvSource *mat);
 guint16 b_arv_source_get_value  (BArvSource *mat, unsigned int i, unsigned int j);
 void b_arv_source_get_minmax (BArvSource *mat, guint16 *min, guint16 *max);
+void b_arv_source_create_stream (BArvSource *s);
 
 G_END_DECLS

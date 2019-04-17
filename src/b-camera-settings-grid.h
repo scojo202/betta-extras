@@ -23,6 +23,7 @@
 
 #include <gtk/gtk.h>
 #include <arv.h>
+#include "b-arv-source.h"
 
 G_BEGIN_DECLS
 
@@ -31,6 +32,8 @@ G_DECLARE_FINAL_TYPE(BCameraSettingsGrid,b_camera_settings_grid,B,CAMERA_SETTING
 #define B_TYPE_CAMERA_SETTINGS_GRID                  (b_camera_settings_grid_get_type ())
 
 void b_camera_settings_grid_set_camera(BCameraSettingsGrid *grid, ArvCamera *cam);
+void b_camera_settings_grid_set_source(BCameraSettingsGrid *grid,
+                                       BArvSource          *s);
 void b_camera_settings_grid_get_region(BCameraSettingsGrid *ivw, int *x, int *y, int *w, int *h);
 
 G_END_DECLS

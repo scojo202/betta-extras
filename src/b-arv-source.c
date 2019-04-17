@@ -133,12 +133,7 @@ arv_source_set_property (GObject      *object,
     {
     case PROP_CAMERA:
       im->camera = g_value_dup_object (value);
-      break;
-    case PROP_STREAM:
-      im->stream = g_value_dup_object(value);
-      /* set up signals */
-      im->handler = g_signal_connect (im->stream, "new-buffer", G_CALLBACK (frame_ready), im);
-      arv_stream_set_emit_signals (im->stream, TRUE);
+      b_arv_source_create_stream (im);
       break;
     default:
       /* We don't have any other property... */
@@ -193,7 +188,7 @@ static void b_arv_source_class_init(BArvSourceClass * klass)
                          "Aravis Stream",
                          "Aravis Stream to display",
                          ARV_TYPE_STREAM,
-                         G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
+                         G_PARAM_READABLE | G_PARAM_CONSTRUCT);
 
   g_object_class_install_properties (gobject_class,
                                      N_PROPERTIES,
@@ -207,11 +202,13 @@ static void b_arv_source_init(BArvSource * self)
 
 BImage *b_arv_source_get_frame(BArvSource *mat)
 {
+  g_return_val_if_fail(B_IS_ARV_SOURCE(mat),NULL);
   return mat->frame;
 }
 
 BImage *b_arv_source_copy_frame(BArvSource *image)
 {
+  g_return_val_if_fail(B_IS_ARV_SOURCE(image),NULL);
   g_mutex_lock(&image->dmut);
   BImage *f2 = b_image_copy(image->frame);
   g_mutex_unlock(&image->dmut);
@@ -245,19 +242,49 @@ guint16 b_arv_source_get_value  (BArvSource *mat, unsigned i, unsigned j)
   return mat->data[mat->ncol*i+j];
 }
 
-void b_arv_source_get_minmax (BArvSource *mat, guint16 *min, guint16 *max)
+void b_arv_source_get_minmax (BArvSource *s, guint16 *min, guint16 *max)
 {
+  g_return_if_fail(B_IS_ARV_SOURCE(s));
   int i;
   guint16 mx=0;
   guint16 mn=65535;
-  g_assert(B_IS_ARV_SOURCE(mat));
-  g_mutex_lock(&mat->dmut);
-  for(i=0;i<mat->nrow*mat->ncol;i++) {
-    if(mat->data[i]>mx) mx = mat->data[i];
-    if(mat->data[i]<mn) mn = mat->data[i];
+  g_mutex_lock(&s->dmut);
+  for(i=0;i<s->nrow*s->ncol;i++) {
+    if(s->data[i]>mx) mx = s->data[i];
+    if(s->data[i]<mn) mn = s->data[i];
   }
-  g_mutex_unlock(&mat->dmut);
+  g_mutex_unlock(&s->dmut);
   if(min) *min = mn;
   if(max) *max = mx;
   return;
 }
+
+void b_arv_source_create_stream (BArvSource *s)
+{
+  g_return_if_fail(B_IS_ARV_SOURCE(s));
+  int i, payload;
+  if(s->stream)
+    arv_stream_set_emit_signals(s->stream,FALSE);
+  g_clear_object(&s->stream);
+  /* Create a new stream object */
+  s->stream = arv_camera_create_stream (s->camera, NULL, NULL);
+  if (s->stream != NULL) {
+    g_object_set (s->stream,
+                  "packet-timeout", 20 * 1000,
+                  "frame-retention", 100 * 1000,
+                  NULL);
+    /* Push 10 buffers in the stream input buffer queue */
+    payload = arv_camera_get_payload (s->camera);
+    for (i = 0; i < 10; i++)
+      arv_stream_push_buffer (s->stream, arv_buffer_new (payload, NULL));
+
+    /* set up signals */
+    s->handler = g_signal_connect (s->stream, "new-buffer", G_CALLBACK (frame_ready), s);
+    arv_stream_set_emit_signals (s->stream, TRUE);
+  }
+  else {
+    g_info ("Can't create stream thread (check if the device is not already used)\n");
+    exit(2);
+  }
+}
+

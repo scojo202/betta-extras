@@ -26,6 +26,7 @@ struct _BCameraSettingsGrid
 {
   GtkGrid base;
   ArvCamera *cam;
+  BArvSource *source;
   GtkSpinButton *exposure_sb;
   GtkSpinButton *frame_rate_sb;
   GtkAdjustment *x_adjustment;
@@ -33,6 +34,7 @@ struct _BCameraSettingsGrid
   GtkAdjustment *width_adjustment;
   GtkAdjustment *height_adjustment;
   GtkToggleButton *external_trigger_button;
+  GtkButton *set_region_button, *use_full_region_button;
   gulong expo_handler, fr_handler, t_handler;
 };
 
@@ -49,6 +51,8 @@ b_camera_settings_grid_class_init (BCameraSettingsGridClass *klass)
   gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS (klass), BCameraSettingsGrid, exposure_sb);
   gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS (klass), BCameraSettingsGrid, frame_rate_sb);
   gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS (klass), BCameraSettingsGrid, external_trigger_button);
+  gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS (klass), BCameraSettingsGrid, set_region_button);
+  gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS (klass), BCameraSettingsGrid, use_full_region_button);
   gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS (klass), BCameraSettingsGrid, x_adjustment);
   gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS (klass), BCameraSettingsGrid, y_adjustment);
   gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS (klass), BCameraSettingsGrid, width_adjustment);
@@ -92,8 +96,8 @@ on_ext_trigger_toggled(GtkToggleButton *tb, gpointer user_data)
   }
 }
 
-/*static void
-set_region_clicked (GtkButton *b,
+static void
+on_set_region_clicked (GtkButton *b,
                  gpointer       user_data)
 {
   BCameraSettingsGrid *g = B_CAMERA_SETTINGS_GRID(user_data);
@@ -112,13 +116,31 @@ set_region_clicked (GtkButton *b,
   active_height = MIN(active_height,sheight-active_y0);
 
   arv_camera_stop_acquisition(g->cam);
-  
-  g_object_set(g,"image",NULL,NULL);
 
   arv_camera_set_region (g->cam, active_x0, active_y0, active_width, active_height);
-  
-  //new_region(ivw);
-}*/
+
+  b_arv_source_create_stream(g->source);
+
+  arv_camera_start_acquisition(g->cam);
+}
+
+static void
+on_full_region_clicked (GtkButton *b,
+                        gpointer   user_data)
+{
+  BCameraSettingsGrid *g = B_CAMERA_SETTINGS_GRID(user_data);
+
+  gint swidth, sheight;
+  arv_camera_get_sensor_size(g->cam, &swidth, &sheight);
+
+  arv_camera_stop_acquisition(g->cam);
+
+  arv_camera_set_region (g->cam, 0, 0, swidth, sheight);
+
+  b_arv_source_create_stream(g->source);
+
+  arv_camera_start_acquisition(g->cam);
+}
 
 static void
 b_camera_settings_grid_init(BCameraSettingsGrid *obj)
@@ -128,49 +150,61 @@ b_camera_settings_grid_init(BCameraSettingsGrid *obj)
 
 }
 
-void b_camera_settings_grid_set_camera(BCameraSettingsGrid *grid, ArvCamera *cam)
+void b_camera_settings_grid_set_camera(BCameraSettingsGrid *g, ArvCamera *cam)
 {
-  grid->cam = g_object_ref(cam);
+  g_return_if_fail(B_IS_CAMERA_SETTINGS_GRID(g));
+  g_return_if_fail(ARV_IS_CAMERA(cam));
+  g->cam = g_object_ref(cam);
 
   /* find exposure time limits and current exposure time */
   double emin,emax;
-  arv_camera_get_exposure_time_bounds(grid->cam,&emin,&emax);
+  arv_camera_get_exposure_time_bounds(g->cam,&emin,&emax);
 
-  double e = arv_camera_get_exposure_time(grid->cam);
+  double e = arv_camera_get_exposure_time(g->cam);
   /* emax is typically something ridiculous -- default to 1 s */
   /* TODO: use log scale for exposure time */
   double step = (1e6-emin)/100;
 
-  GtkAdjustment *adj = gtk_spin_button_get_adjustment(grid->exposure_sb);
+  GtkAdjustment *adj = gtk_spin_button_get_adjustment(g->exposure_sb);
   gtk_adjustment_configure(adj,e,emin,1e6,step,step*10,step*10);
-  grid->expo_handler = g_signal_connect(grid->exposure_sb,"value-changed",G_CALLBACK(on_expo_changed),grid);
+  g->expo_handler = g_signal_connect(g->exposure_sb,"value-changed",G_CALLBACK(on_expo_changed),g);
 
   /* find frame rate limits and current frame rate */
-  arv_camera_get_frame_rate_bounds(grid->cam,&emin,&emax);
-  e = arv_camera_get_frame_rate(grid->cam);
+  arv_camera_get_frame_rate_bounds(g->cam,&emin,&emax);
+  e = arv_camera_get_frame_rate(g->cam);
   step = (emax-emin)/100;
-  adj = gtk_spin_button_get_adjustment(grid->frame_rate_sb);
+  adj = gtk_spin_button_get_adjustment(g->frame_rate_sb);
   gtk_adjustment_configure(adj,e,emin,emax,step,step*10,step*10);
-  grid->fr_handler = g_signal_connect(grid->frame_rate_sb,"value-changed",G_CALLBACK(on_fr_changed),grid);
+  g->fr_handler = g_signal_connect(g->frame_rate_sb,"value-changed",G_CALLBACK(on_fr_changed),g);
 
   /* trigger source */
-  const gchar *source = arv_camera_get_trigger_source(grid->cam);
+  const gchar *source = arv_camera_get_trigger_source(g->cam);
   if(!strcmp(source,"Freerun"))
-    gtk_toggle_button_set_active(grid->external_trigger_button,FALSE);
+    gtk_toggle_button_set_active(g->external_trigger_button,FALSE);
   else
-    gtk_toggle_button_set_active(grid->external_trigger_button,TRUE);
+    gtk_toggle_button_set_active(g->external_trigger_button,TRUE);
 
-  grid->t_handler = g_signal_connect(grid->external_trigger_button,"toggled", G_CALLBACK(on_ext_trigger_toggled), grid);
+  g->t_handler = g_signal_connect(g->external_trigger_button,"toggled", G_CALLBACK(on_ext_trigger_toggled), g);
   
   /* set values and limits for region adjustments */
   gint swidth, sheight;
-  arv_camera_get_sensor_size(grid->cam, &swidth, &sheight);
+  arv_camera_get_sensor_size(g->cam, &swidth, &sheight);
   gint x,y,width,height;
-  arv_camera_get_region(grid->cam,&x,&y,&width,&height);
-  gtk_adjustment_configure(grid->x_adjustment,x,0,swidth,1,10,0);
-  gtk_adjustment_configure(grid->y_adjustment,y,0,sheight,1,10,0);
-  gtk_adjustment_configure(grid->width_adjustment,width,1,swidth,1,10,0);
-  gtk_adjustment_configure(grid->height_adjustment,height,1,sheight,1,10,0);
+  arv_camera_get_region(g->cam,&x,&y,&width,&height);
+  gtk_adjustment_configure(g->x_adjustment,x,0,swidth,1,10,0);
+  gtk_adjustment_configure(g->y_adjustment,y,0,sheight,1,10,0);
+  gtk_adjustment_configure(g->width_adjustment,width,1,swidth,1,10,0);
+  gtk_adjustment_configure(g->height_adjustment,height,1,sheight,1,10,0);
+
+  g_signal_connect(g->set_region_button, "clicked", G_CALLBACK (on_set_region_clicked), g);
+  g_signal_connect(g->use_full_region_button, "clicked", G_CALLBACK (on_full_region_clicked), g);
+}
+
+void b_camera_settings_grid_set_source(BCameraSettingsGrid *g,
+                                       BArvSource          *s)
+{
+  g_return_if_fail(B_IS_CAMERA_SETTINGS_GRID(g));
+  g->source = g_object_ref(s);
 }
 
 void b_camera_settings_grid_get_region(BCameraSettingsGrid *g, int *x, int *y, int *w, int *h)
