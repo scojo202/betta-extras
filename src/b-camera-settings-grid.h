@@ -35,5 +35,6 @@ void b_camera_settings_grid_set_camera(BCameraSettingsGrid *grid, ArvCamera *cam
 void b_camera_settings_grid_set_source(BCameraSettingsGrid *grid,
                                        BArvSource          *s);
 void b_camera_settings_grid_get_region(BCameraSettingsGrid *ivw, int *x, int *y, int *w, int *h);
+gboolean b_camera_settings_grid_get_region_modified(BCameraSettingsGrid *g);
 
 G_END_DECLS

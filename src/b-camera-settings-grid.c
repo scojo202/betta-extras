@@ -225,3 +225,16 @@ void b_camera_settings_grid_get_region(BCameraSettingsGrid *g, int *x, int *y, i
   if(h)
     *h = active_height;
 }
+
+gboolean b_camera_settings_grid_get_region_modified(BCameraSettingsGrid *g)
+{
+  int active_x0 = (int) gtk_adjustment_get_value(g->x_adjustment);
+  int active_y0 = (int) gtk_adjustment_get_value(g->y_adjustment);
+  int active_width = (int) gtk_adjustment_get_value(g->width_adjustment);
+  int active_height = (int) gtk_adjustment_get_value(g->height_adjustment);
+
+  gint x,y,width,height;
+  arv_camera_get_region(g->cam,&x,&y,&width,&height);
+
+  return ((x!=active_x0) || (y!=active_y0) || (width!=active_width) || (height!=active_height));
+}
