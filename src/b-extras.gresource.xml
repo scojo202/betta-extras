@@ -2,5 +2,6 @@
 <gresources>
   <gresource prefix="/com/github/scojo202/betta/">
     <file preprocess="xml-stripblanks">b-camera-settings-grid.ui</file>
+    <file preprocess="xml-stripblanks">b-video-window.ui</file>
   </gresource>
 </gresources>

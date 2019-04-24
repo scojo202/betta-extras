@@ -17,7 +17,8 @@ src_public_headers += [
   'b-simple-operation.h',
   'b-subset-operation.h',
   'b-image.h',
-  'b-camera-settings-grid.h'
+  'b-camera-settings-grid.h',
+  'b-video-window.h'
 ]
 
 src_public_sources += [
@@ -31,7 +32,8 @@ src_public_sources += [
   'b-simple-operation.c',
   'b-subset-operation.c',
   'b-image.c',
-  'b-camera-settings-grid.c'
+  'b-camera-settings-grid.c',
+  'b-video-window.c'
 ]
 
 bextras_deps = [libgobj_dep, libgio_dep, libbetta_dep, fftw_dep, libm, hdf5]
