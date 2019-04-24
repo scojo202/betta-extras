@@ -35,6 +35,7 @@
 #ifdef ARAVIS
 #include <b-arv-source.h>
 #include <b-camera-settings-grid.h>
+#include <b-video-window.h>
 #endif
 
 #endif
