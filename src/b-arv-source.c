@@ -99,14 +99,15 @@ void frame_ready(ArvStream *stream, gpointer user_data) {
           image->data = g_malloc0(sizeof(guint16)*image->nrow*image->ncol);
           image->frame = b_image_new(2,image->nrow, image->ncol);
         }
-        for(i=0;i<image->nrow*image->ncol;i++) {
-          image->data[i]=(guint16) b[i];
-        }
-        image->timestamp = arv_buffer_get_timestamp(buffer);
-        g_mutex_unlock(&image->dmut);
-        g_idle_add(emit_changed,image);
+      for(i=0;i<image->nrow*image->ncol;i++) {
+        image->data[i]=(guint16) b[i];
       }
+      image->frame->num = arv_buffer_get_frame_id(buffer);
+      image->timestamp = arv_buffer_get_timestamp(buffer);
+      g_mutex_unlock(&image->dmut);
+      g_idle_add(emit_changed,image);
     }
+  }
   arv_stream_push_buffer (stream, buffer);
 }
 
@@ -283,8 +284,7 @@ void b_arv_source_create_stream (BArvSource *s)
     arv_stream_set_emit_signals (s->stream, TRUE);
   }
   else {
-    g_info ("Can't create stream thread (check if the device is not already used)\n");
-    exit(2);
+    g_warning ("Can't create stream thread (check if the device is not already used)\n");
   }
 }
 
