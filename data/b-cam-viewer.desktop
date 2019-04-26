@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Camera viewer
+Icon=b-cam-viewer
+StartupNotify=true
+Exec=b-cam-viewer

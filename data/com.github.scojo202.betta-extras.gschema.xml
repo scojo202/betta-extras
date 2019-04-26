@@ -1,0 +1,11 @@
+<schemalist>
+  <schema id="com.github.scojo202.bcamviewer" path="/com/github/scojo202/bcamviewer/">
+  <key name="packet-size" type="i">
+    <default>1500</default>
+    <range min="1000" max="9000" />
+    <summary>Packet size for GigE transmission</summary>
+    <description>Packet size in bytes -- to be greater than 1500 bytes, ethernet adapter and switch must be able to handle jumbo frames.</description>
+  </key>
+  </schema>
+</schemalist>
+

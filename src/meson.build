@@ -50,6 +50,16 @@ libbextras = shared_library('bextras-0.2',src_public_sources + bextras_resource,
 
 libbextras_dep = declare_dependency(dependencies: bextras_deps, link_with: libbextras, include_directories: include_directories('.'),)
 
+bcamviewer = executable('b-cam-viewer',
+  ['b-cam-viewer.c'],
+  dependencies: [
+    libbetta_dep,
+    libbextras_dep,
+    aravis_dep
+  ],
+  install: true
+)
+
 bextras_dep_sources = []
 
 pkgg = import('pkgconfig')

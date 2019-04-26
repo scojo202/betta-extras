@@ -35,6 +35,7 @@ endif
 
 python3 = import('python3')
 
+subdir('data')
 subdir('src')
 subdir('test')
 
