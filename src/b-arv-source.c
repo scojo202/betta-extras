@@ -189,7 +189,7 @@ static void b_arv_source_class_init(BArvSourceClass * klass)
                          "Aravis Stream",
                          "Aravis Stream to display",
                          ARV_TYPE_STREAM,
-                         G_PARAM_READABLE | G_PARAM_CONSTRUCT);
+                         G_PARAM_READABLE);
 
   g_object_class_install_properties (gobject_class,
                                      N_PROPERTIES,
