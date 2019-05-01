@@ -36,8 +36,10 @@ BImage *b_image_new(guchar bits, guint32 r, guint32 c)
 {
   BImage *f = g_slice_new0(BImage);
   if (r > 0 && c > 0) {
-    if(bits==2)
+    if(bits==2) {
       f->data = short_array_calloc(r * c);
+      f->bits=2;
+    }
     f->nrow = r;
     f->ncol = c;
   }
