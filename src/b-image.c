@@ -22,6 +22,15 @@
 #include "b-image.h"
 
 static
+G_GNUC_MALLOC guchar * char_array_calloc(size_t n)
+{
+  g_return_val_if_fail(n > 0, NULL);
+  g_return_val_if_fail(n < 50000000, NULL);
+  guchar *array = g_new0(guchar, n);
+  return array;
+}
+
+static
 G_GNUC_MALLOC guint16 * short_array_calloc(size_t n)
 {
   g_return_val_if_fail(n > 0, NULL);
@@ -34,11 +43,16 @@ G_GNUC_MALLOC guint16 * short_array_calloc(size_t n)
 
 BImage *b_image_new(guchar bits, guint32 r, guint32 c)
 {
+  g_return_val_if_fail(bits==0, NULL);
+  g_return_val_if_fail(bits>2, NULL);
   BImage *f = g_slice_new0(BImage);
+  f->bits = bits;
   if (r > 0 && c > 0) {
+    if(bits==1) {
+      f->data = char_array_calloc(r * c);
+    }
     if(bits==2) {
       f->data = short_array_calloc(r * c);
-      f->bits=2;
     }
     f->nrow = r;
     f->ncol = c;
@@ -49,6 +63,8 @@ BImage *b_image_new(guchar bits, guint32 r, guint32 c)
 BImage *b_image_copy(const BImage * f)
 {
     BImage *nf = b_image_new(f->bits, f->nrow, f->ncol);
+    if(f->bits==1)
+      memcpy(nf->data, f->data, sizeof(guchar) * (f->nrow) * (f->ncol));
     if(f->bits==2)
       memcpy(nf->data, f->data, sizeof(guint16) * (f->nrow) * (f->ncol));
     nf->num = f->num;
@@ -61,4 +77,56 @@ void b_image_free(BImage * f)
     g_return_if_fail(f);
     g_clear_pointer(&f->data,g_free);
     g_slice_free(BImage, f);
+}
+
+guint16 b_image_max(const BImage * f, guint32 * c, guint32 * r)
+{
+  const guint32 nrow = f->nrow;
+  const guint32 ncol = f->ncol;
+  guint32 i, j, k;
+  guint16 m = 0;
+  if (r && c) {
+    *c = 0;
+    *r = 0;
+    k = 0;
+  }
+  if(f->bits==1) {
+    const guchar *data = (guchar *) f->data;
+    if (r && c) {
+      for (j = 0; j < nrow; j++) {
+        for (i = 0; i < ncol; i++) {
+          if (data[k] > m) {
+            m = data[k];
+            *r = j;
+            *c = i;
+          }
+          k++;
+        }
+      }
+    } else {
+      for (j = 0; j < nrow * ncol; j++) {
+        m = MAX(m, data[j]);
+      }
+    }
+  }
+  if(f->bits==2) {
+    const guint16 *data = (guint16 *) f->data;
+    if (r && c) {
+      for (j = 0; j < nrow; j++) {
+        for (i = 0; i < ncol; i++) {
+          if (data[k] > m) {
+            m = data[k];
+            *r = j;
+            *c = i;
+          }
+          k++;
+        }
+      }
+    } else {
+      for (j = 0; j < nrow * ncol; j++) {
+        m = MAX(m, data[j]);
+      }
+    }
+  }
+  return m;
 }

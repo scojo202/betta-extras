@@ -16,9 +16,7 @@ src_public_headers += [
   'b-fft-operation.h',
   'b-simple-operation.h',
   'b-subset-operation.h',
-  'b-image.h',
-  'b-camera-settings-grid.h',
-  'b-video-window.h'
+  'b-image.h'
 ]
 
 src_public_sources += [
@@ -31,16 +29,14 @@ src_public_sources += [
   'b-fft-operation.c',
   'b-simple-operation.c',
   'b-subset-operation.c',
-  'b-image.c',
-  'b-camera-settings-grid.c',
-  'b-video-window.c'
+  'b-image.c'
 ]
 
 bextras_deps = [libgobj_dep, libgio_dep, libbetta_dep, fftw_dep, libm, hdf5]
 
 if aravis_dep.found()
-  src_public_headers+=['b-arv-source.h','b-camera-settings-grid.h']
-  src_public_sources+=['b-arv-source.c','b-camera-settings-grid.c']
+  src_public_headers+=['b-arv-source.h','b-camera-settings-grid.h','b-video-window.h']
+  src_public_sources+=['b-arv-source.c','b-camera-settings-grid.c','b-video-window.c']
   bextras_deps += aravis_dep
 endif
 
@@ -50,6 +46,7 @@ libbextras = shared_library('bextras-0.2',src_public_sources + bextras_resource,
 
 libbextras_dep = declare_dependency(dependencies: bextras_deps, link_with: libbextras, include_directories: include_directories('.'),)
 
+if aravis_dep.found()
 bcamviewer = executable('b-cam-viewer',
   ['b-cam-viewer.c'],
   dependencies: [
@@ -59,6 +56,7 @@ bcamviewer = executable('b-cam-viewer',
   ],
   install: true
 )
+endif
 
 bextras_dep_sources = []
 
