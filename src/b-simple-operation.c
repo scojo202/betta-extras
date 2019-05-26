@@ -158,7 +158,6 @@ static void b_simple_operation_class_init(BSimpleOperationClass * slice_klass)
 
 static void b_simple_operation_init(BSimpleOperation * s)
 {
-  g_assert(B_IS_SIMPLE_OPERATION(s));
 }
 
 /**

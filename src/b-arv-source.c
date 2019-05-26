@@ -177,11 +177,11 @@ static void b_arv_source_class_init(BArvSourceClass * klass)
 
   data_class->emit_changed = arv_source_emit_changed;
 
-  obj_properties[PROP_CAMERA] = 
-    g_param_spec_object ("camera", 
-                         "Camera", 
-                         "Camera object", 
-                         ARV_TYPE_CAMERA, 
+  obj_properties[PROP_CAMERA] =
+    g_param_spec_object ("camera",
+                         "Camera",
+                         "Camera object",
+                         ARV_TYPE_CAMERA,
                          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
 
   obj_properties[PROP_STREAM] =
@@ -230,7 +230,7 @@ BMatrixSize b_arv_source_get_size    (BArvSource *mat)
 
 guint16	*b_arv_source_get_values (BArvSource *mat)
 {
-  g_assert(B_IS_ARV_SOURCE(mat));
+  g_return_val_if_fail(B_IS_ARV_SOURCE(mat),NULL);
   g_mutex_lock(&mat->dmut);
   guint16 *n = g_memdup(mat->data,sizeof(guint16)*mat->nrow*mat->ncol);
   g_mutex_unlock(&mat->dmut);
@@ -239,7 +239,7 @@ guint16	*b_arv_source_get_values (BArvSource *mat)
 
 guint16 b_arv_source_get_value  (BArvSource *mat, unsigned i, unsigned j)
 {
-  g_assert(B_IS_ARV_SOURCE(mat));
+  g_return_val_if_fail(B_IS_ARV_SOURCE(mat),0);
   return mat->data[mat->ncol*i+j];
 }
 
@@ -257,7 +257,6 @@ void b_arv_source_get_minmax (BArvSource *s, guint16 *min, guint16 *max)
   g_mutex_unlock(&s->dmut);
   if(min) *min = mn;
   if(max) *max = mx;
-  return;
 }
 
 void b_arv_source_create_stream (BArvSource *s)
@@ -287,4 +286,3 @@ void b_arv_source_create_stream (BArvSource *s)
     g_warning ("Can't create stream thread (check if the device is not already used)\n");
   }
 }
-

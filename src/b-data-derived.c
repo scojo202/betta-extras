@@ -301,8 +301,8 @@ void b_derived_scalar_class_init(BDerivedScalarClass * klass)
 BData *b_derived_scalar_new(BData * input, BOperation * op)
 {
   if (input)
-    g_assert(B_IS_DATA(input));
-  g_assert(B_IS_OPERATION(op));
+    g_return_val_if_fail(B_IS_DATA(input),NULL);
+  g_return_val_if_fail(B_IS_OPERATION(op),NULL);
 
   BData *d = g_object_new(B_TYPE_DERIVED_SCALAR, "operation", op, NULL);
 
@@ -529,8 +529,8 @@ static void b_derived_vector_init(BDerivedVector * der)
 BData *b_derived_vector_new(BData * input, BOperation * op)
 {
   if (input)
-    g_assert(B_IS_DATA(input));
-  g_assert(B_IS_OPERATION(op));
+    g_return_val_if_fail(B_IS_DATA(input),NULL);
+  g_return_val_if_fail(B_IS_OPERATION(op),NULL);
 
   BData *d = g_object_new(B_TYPE_DERIVED_VECTOR, "operation", op, NULL);
 
@@ -767,8 +767,8 @@ static void b_derived_matrix_init(BDerivedMatrix * der)
 BData *b_derived_matrix_new(BData * input, BOperation * op)
 {
   if (input)
-    g_assert(B_IS_DATA(input));
-  g_assert(B_IS_OPERATION(op));
+    g_return_val_if_fail(B_IS_DATA(input),NULL);
+  g_return_val_if_fail(B_IS_OPERATION(op),NULL);
 
   BData *d = g_object_new(B_TYPE_DERIVED_MATRIX, "operation", op, NULL);
 

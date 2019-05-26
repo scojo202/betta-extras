@@ -100,8 +100,8 @@ double *b_create_input_array_from_matrix(BMatrix * input, gboolean is_new,
  **/
 BData *b_data_new_from_operation(BOperation *op, BData *input)
 {
-  g_assert(B_IS_OPERATION(op));
-  g_assert(B_IS_DATA(input));
+  g_return_val_if_fail(B_IS_OPERATION(op),NULL);
+  g_return_val_if_fail(B_IS_DATA(input),NULL);
   BOperationClass *klass = B_OPERATION_GET_CLASS (op);
   gpointer data = b_operation_create_task_data(op,input);
   unsigned int dims[4];
