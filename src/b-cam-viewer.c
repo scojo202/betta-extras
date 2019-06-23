@@ -152,7 +152,7 @@ b_cam_viewer_app_startup (GApplication * application)
     gint width, height;
     arv_camera_get_sensor_size(camera, &width, &height);
 
-    arv_camera_set_region (camera, 0, 0, 400, 300);
+    //arv_camera_set_region (camera, 0, 0, 400, 300);
 
     arv_camera_gv_set_packet_size (camera, mtu);
     //guint mps = arv_camera_gv_auto_packet_size(camera);

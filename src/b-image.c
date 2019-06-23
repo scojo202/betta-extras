@@ -41,17 +41,17 @@ G_GNUC_MALLOC guint16 * short_array_calloc(size_t n)
 
 /* coordinates: r - row and c - column */
 
-BImage *b_image_new(guchar bits, guint32 r, guint32 c)
+BImage *b_image_new(guchar bytes, guint32 r, guint32 c)
 {
-  g_return_val_if_fail(bits==0, NULL);
-  g_return_val_if_fail(bits>2, NULL);
+  g_return_val_if_fail(bytes>0, NULL);
+  g_return_val_if_fail(bytes<=2, NULL);
   BImage *f = g_slice_new0(BImage);
-  f->bits = bits;
+  f->bytes = bytes;
   if (r > 0 && c > 0) {
-    if(bits==1) {
+    if(bytes==1) {
       f->data = char_array_calloc(r * c);
     }
-    if(bits==2) {
+    if(bytes==2) {
       f->data = short_array_calloc(r * c);
     }
     f->nrow = r;
@@ -62,10 +62,10 @@ BImage *b_image_new(guchar bits, guint32 r, guint32 c)
 
 BImage *b_image_copy(const BImage * f)
 {
-    BImage *nf = b_image_new(f->bits, f->nrow, f->ncol);
-    if(f->bits==1)
+    BImage *nf = b_image_new(f->bytes, f->nrow, f->ncol);
+    if(f->bytes==1)
       memcpy(nf->data, f->data, sizeof(guchar) * (f->nrow) * (f->ncol));
-    if(f->bits==2)
+    if(f->bytes==2)
       memcpy(nf->data, f->data, sizeof(guint16) * (f->nrow) * (f->ncol));
     nf->num = f->num;
     nf->timestamp = f->timestamp;
@@ -90,7 +90,7 @@ guint16 b_image_max(const BImage * f, guint32 * c, guint32 * r)
     *r = 0;
     k = 0;
   }
-  if(f->bits==1) {
+  if(f->bytes==1) {
     const guchar *data = (guchar *) f->data;
     if (r && c) {
       for (j = 0; j < nrow; j++) {
@@ -109,7 +109,7 @@ guint16 b_image_max(const BImage * f, guint32 * c, guint32 * r)
       }
     }
   }
-  if(f->bits==2) {
+  if(f->bytes==2) {
     const guint16 *data = (guint16 *) f->data;
     if (r && c) {
       for (j = 0; j < nrow; j++) {
