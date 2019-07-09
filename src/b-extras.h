@@ -28,7 +28,6 @@
 #include <b-simple-operation.h>
 #include <b-subset-operation.h>
 #include <b-slice-operation.h>
-#include <b-linear-range.h>
 #include <b-scalar-property.h>
 #include <b-fft-operation.h>
 #include <b-image.h>

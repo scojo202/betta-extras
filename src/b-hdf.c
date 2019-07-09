@@ -81,7 +81,7 @@ BFile * b_file_open_for_writing(const gchar * filename, gboolean overwrite, GErr
     g_set_error(err, G_IO_ERROR, G_IO_ERROR_EXISTS,
                 "file already exists: %s", filename);
     if (!overwrite)
-      return 0;
+      return NULL;
   }
   hid_t hfile = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
   BFile *f = g_object_new(B_TYPE_FILE,NULL);
@@ -109,14 +109,14 @@ BFile * b_file_open_for_reading(const gchar *filename, GError **err)
   if (!exists) {
     g_set_error(err, G_IO_ERROR, G_IO_ERROR_NOT_FOUND,
                 "file not found: %s", filename);
-    return 0;
+    return NULL;
   }
   /* make sure file is not corrupted */
   htri_t r = H5Fis_hdf5(filename);
   if(r<=0) {
     g_set_error(err, G_IO_ERROR, G_IO_ERROR_FAILED,
                 "file is not HDF5 format: %s", filename);
-    return 0;
+    return NULL;
   }
   hid_t hfile = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
   BFile *f = g_object_new(B_TYPE_FILE,NULL);

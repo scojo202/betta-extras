@@ -1,92 +1,4 @@
 <SECTION>
-<FILE>y-data</FILE>
-<TITLE>YData</TITLE>
-YDataClass
-y_data_dup
-y_data_dup_to_simple
-y_data_serialize
-y_data_emit_changed
-y_data_has_value
-y_data_get_n_dimensions
-y_data_get_n_values
-YData
-<SUBSECTION Standard>
-Y_TYPE_DATA
-<SUBSECTION Private>
-YDataFlags
-</SECTION>
-
-<SECTION>
-<FILE>y-scalar</FILE>
-<TITLE>YScalar</TITLE>
-YScalarClass
-y_scalar_get_value
-y_scalar_get_str
-YScalar
-<SUBSECTION Standard>
-Y_TYPE_SCALAR
-</SECTION>
-
-<SECTION>
-<FILE>y-vector</FILE>
-<TITLE>YVector</TITLE>
-YVectorClass
-y_vector_get_len
-y_vector_get_values
-y_vector_get_value
-y_vector_get_str
-y_vector_get_minmax
-y_vector_vary_uniformly
-YVector
-<SUBSECTION Standard>
-Y_TYPE_VECTOR
-</SECTION>
-
-<SECTION>
-<FILE>y-matrix</FILE>
-<TITLE>YMatrix</TITLE>
-YMatrixSize
-YMatrixClass
-y_matrix_get_size
-y_matrix_get_rows
-y_matrix_get_columns
-y_matrix_get_values
-y_matrix_get_value
-y_matrix_get_str
-y_matrix_get_minmax
-YMatrix
-<SUBSECTION Standard>
-Y_TYPE_MATRIX
-</SECTION>
-
-<SECTION>
-<FILE>y-three-d-array</FILE>
-<TITLE>YThreeDArray</TITLE>
-YThreeDArraySize
-YThreeDArrayClass
-y_three_d_array_get_size
-y_three_d_array_get_rows
-y_three_d_array_get_columns
-y_three_d_array_get_layers
-y_three_d_array_get_values
-y_three_d_array_get_value
-y_three_d_array_get_str
-y_three_d_array_get_minmax
-YThreeDArray
-<SUBSECTION Standard>
-Y_TYPE_THREE_D_ARRAY
-</SECTION>
-
-<SECTION>
-<FILE>y-struct</FILE>
-<TITLE>YStruct</TITLE>
-y_struct_get_data
-y_struct_set_data
-y_struct_foreach
-YStruct
-<SUBSECTION Standard>
-Y_TYPE_STRUCT
-</SECTION>
 
 <SECTION>
 <FILE>y-data-derived</FILE>
@@ -108,29 +20,6 @@ y_vector_attach_h5
 y_matrix_attach_h5
 y_vector_from_h5
 y_val_vector_replace_h5
-</SECTION>
-
-<SECTION>
-<FILE>y-data-simple</FILE>
-<TITLE>Simple array data objects</TITLE>
-y_val_scalar_new
-y_val_scalar_get_val
-y_val_vector_new
-y_val_vector_new_alloc
-y_val_vector_new_copy
-y_val_vector_get_array
-y_val_vector_replace_array
-y_val_matrix_new
-y_val_matrix_new_copy
-y_val_matrix_get_array
-y_val_matrix_replace_array
-YValMatrix
-YValScalar
-YValVector
-<SUBSECTION Standard>
-Y_TYPE_VAL_SCALAR
-Y_TYPE_VAL_VECTOR
-Y_TYPE_VAL_MATRIX
 </SECTION>
 
 <SECTION>
@@ -185,29 +74,4 @@ y_property_scalar_new
 YPropertyScalar
 <SUBSECTION Standard>
 Y_TYPE_PROPERTY_SCALAR
-</SECTION>
-
-<SECTION>
-<FILE>y-vector-ring</FILE>
-<TITLE>YRingVector</TITLE>
-y_ring_vector_new
-y_ring_vector_set_length
-y_ring_vector_append
-y_ring_vector_append_array
-y_ring_vector_set_source
-YRingVector
-<SUBSECTION Standard>
-Y_TYPE_RING_VECTOR
-</SECTION>
-
-<SECTION>
-<FILE>y-linear-range</FILE>
-<TITLE>YLinearRange</TITLE>
-y_linear_range_vector_new
-y_linear_range_vector_set_length
-y_linear_range_vector_set_pars
-y_fourier_linear_range_vector_new
-<SUBSECTION Standard>
-Y_TYPE_LINEAR_RANGE_VECTOR
-Y_TYPE_FOURIER_LINEAR_RANGE_VECTOR
 </SECTION>

@@ -7,7 +7,6 @@ src_public_sources = []
 
 src_public_headers += [
   'b-extras.h',
-  'b-linear-range.h',
   'b-scalar-property.h',
   'b-data-derived.h',
   'b-operation.h',
@@ -20,7 +19,6 @@ src_public_headers += [
 ]
 
 src_public_sources += [
-  'b-linear-range.c',
   'b-scalar-property.c',
   'b-data-derived.c',
   'b-operation.c',
