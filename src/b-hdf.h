@@ -19,8 +19,7 @@
  * USA
  */
 
-#ifndef B_HDF_H
-#define B_HDF_H
+#pragma once
 
 #include <hdf5.h>
 #include <hdf5_hl.h>
@@ -54,5 +53,3 @@ BData *b_matrix_from_h5 (hid_t group_id, const gchar *data_name);
 void b_val_vector_replace_h5 (BValVector *v, hid_t group_id, const gchar *data_name);
 
 G_END_DECLS
-
-#endif

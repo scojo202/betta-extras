@@ -19,8 +19,7 @@
  * USA
  */
 
-#ifndef OP_SIMPLE_H
-#define OP_SIMPLE_H
+#pragma once
 
 #include <data/b-data-class.h>
 #include <b-operation.h>
@@ -36,6 +35,3 @@ typedef double (*BDoubleToDouble) (double x);
 BOperation *b_simple_operation_new (BDoubleToDouble func);
 
 G_END_DECLS
-
-#endif
-

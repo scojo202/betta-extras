@@ -19,8 +19,7 @@
  * USA
  */
 
-#ifndef DATA_VECTOR_SUBSET_H
-#define DATA_VECTOR_SUBSET_H
+#pragma once
 
 #include <data/b-data-class.h>
 #include <b-operation.h>
@@ -32,6 +31,3 @@ G_DECLARE_FINAL_TYPE(BSubsetOperation,b_subset_operation,B,SUBSET_OPERATION,BOpe
 #define B_TYPE_SUBSET_OPERATION  (b_subset_operation_get_type ())
 
 G_END_DECLS
-
-#endif
-

@@ -19,8 +19,7 @@
  * USA
  */
 
-#ifndef DATA_VECTOR_SLICE_H
-#define DATA_VECTOR_SLICE_H
+#pragma once
 
 #include <data/b-data-class.h>
 #include <b-operation.h>
@@ -47,5 +46,3 @@ void b_slice_operation_set_pars(BSliceOperation *d, int type, int index,
 
 
 G_END_DECLS
-
-#endif

@@ -22,8 +22,7 @@
 /*  Object for an operation  */
 /*  Operations maintain copies of input data for multithreading */
 
-#ifndef B_OP_H
-#define B_OP_H
+#pragma once
 
 #include <gio/gio.h>
 #include <data/b-data-class.h>
@@ -66,5 +65,3 @@ void b_operation_run_task(BOperation *op, gpointer user_data, GAsyncReadyCallbac
 void b_operation_update_task_data(BOperation *op, gpointer task_data, BData *input);
 
 G_END_DECLS
-
-#endif

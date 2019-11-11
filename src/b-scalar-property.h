@@ -19,8 +19,7 @@
  * USA
  */
 
-#ifndef _SCALAR_PROP_H
-#define _SCALAR_PROP_H
+#pragma once
 
 #include <data/b-data-class.h>
 
@@ -33,5 +32,3 @@ G_DECLARE_FINAL_TYPE(BPropertyScalar,b_property_scalar,B,PROPERTY_SCALAR,BScalar
 BPropertyScalar	*b_property_scalar_new      (GObject *obj, const gchar *name);
 
 G_END_DECLS
-
-#endif

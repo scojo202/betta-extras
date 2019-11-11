@@ -19,8 +19,7 @@
  * USA
  */
 
-#ifndef OP_FFT_H
-#define OP_FFT_H
+#pragma once
 
 #include <data/b-data-class.h>
 #include <b-operation.h>
@@ -39,5 +38,3 @@ enum {
 BOperation *b_fft_operation_new (int type);
 
 G_END_DECLS
-
-#endif

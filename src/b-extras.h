@@ -19,8 +19,7 @@
  * USA
  */
 
-#ifndef B_EXTRAS_H
-#define B_EXTRAS_H
+#pragma once
 
 #include <b-data-derived.h>
 #include <b-operation.h>
@@ -35,6 +34,4 @@
 #include <b-arv-source.h>
 #include <b-camera-settings-grid.h>
 #include <b-video-window.h>
-#endif
-
 #endif

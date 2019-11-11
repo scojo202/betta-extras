@@ -33,4 +33,3 @@ void b_video_window_on(BVideoWindow *self);
 void b_video_window_attach_settings(BVideoWindow *vw, GSettings *settings);
 
 G_END_DECLS
-

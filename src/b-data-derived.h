@@ -19,8 +19,7 @@
  * USA
  */
 
-#ifndef DATA_DERIVED_H
-#define DATA_DERIVED_H
+#pragma once
 
 #include <data/b-data-class.h>
 #include <b-operation.h>
@@ -57,5 +56,3 @@ G_DECLARE_FINAL_TYPE(BDerivedMatrix,b_derived_matrix,B,DERIVED_MATRIX,BMatrix)
 BData	*b_derived_matrix_new      (BData *input, BOperation *op);
 
 G_END_DECLS
-
-#endif

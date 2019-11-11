@@ -60,6 +60,12 @@ bextras_dep_sources = []
 
 pkgg = import('pkgconfig')
 
+pkg_reqs = [ 'glib-2.0', 'gobject-2.0', 'gio-2.0', 'libbetta-0.2', 'fftw3']
+
+if aravis_dep.found()
+  pkg_reqs += ['aravis-0.6']
+endif
+
 pkgg.generate(
     libraries: [libbextras],
       subdirs: [ 'libbextras-0.2'.format(meson.project_version()) ],
@@ -67,7 +73,7 @@ pkgg.generate(
          name: 'b-extras',
      filebase: 'b-extras-0.2',
   description: 'BExtras',
-     requires: [ 'glib-2.0', 'gobject-2.0', 'gio-2.0', 'libbetta-0.2', 'fftw3', 'aravis-0.6'],
+     requires: pkg_reqs,
   install_dir: join_paths(get_option('libdir'), 'pkgconfig'),
 )
 
