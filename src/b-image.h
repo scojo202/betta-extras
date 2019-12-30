@@ -39,4 +39,7 @@ BImage *b_image_copy(const BImage * f);
 void b_image_free(BImage * f);
 guint16 b_image_max(const BImage * f, guint32 * c, guint32 * r);
 
+void b_image_save_to_png(const BImage * f, char *filename);
+void b_image_save_to_png_async(const BImage * f, char *filename);
+
 G_END_DECLS

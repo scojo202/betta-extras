@@ -845,9 +845,8 @@ activate_save (GSimpleAction *action,
 
     filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
 
-    //BImage *frame = b_arv_source_get_frame(widget->image);
-    g_warning("Save not implemented");
-    //frame_save_to_png_async (frame, filename);
+    BImage *frame = b_arv_source_get_frame(widget->image);
+    b_image_save_to_png_async (frame, filename);
     g_free (filename);
   }
 

@@ -18,7 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301
  * USA
  */
-
+#include <png.h>
+#include <string.h>
 #include "b-image.h"
 
 static
@@ -129,4 +130,120 @@ guint16 b_image_max(const BImage * f, guint32 * c, guint32 * r)
     }
   }
   return m;
+}
+
+typedef struct {
+    BImage *f;
+    char *filename;
+} PNGSaveData;
+
+static
+void png_data_free(gpointer task_data)
+{
+    PNGSaveData *d = (PNGSaveData *) task_data;
+    b_image_free(d->f);
+    g_free(d->filename);
+    g_slice_free(PNGSaveData, d);
+}
+
+double *frame_to_double_array(const BImage * f)
+{
+    int i;
+    double *d = g_malloc(sizeof(double) * f->ncol * f->nrow);
+    guint16 *id = (guint16 *) f->data;
+    for (i = 0; i < f->ncol * f->nrow; i++) {
+	d[i] = (double) id[i];
+    }
+    return d;
+}
+
+static
+void frame_save_to_png_callback(GObject * obj, GAsyncResult * res,
+				gpointer userdata)
+{
+}
+
+static
+void frame_save_thread(GTask * task, gpointer source_object,
+		       gpointer task_data, GCancellable * cancel)
+{
+    PNGSaveData *d = (PNGSaveData *) task_data;
+    b_image_save_to_png(d->f, d->filename);
+}
+
+void b_image_save_to_png_async(const BImage * f, char *filename)
+{
+    GTask *task = g_task_new(NULL, NULL, frame_save_to_png_callback, NULL);
+    PNGSaveData *d = g_slice_new(PNGSaveData);
+    d->f = b_image_copy(f);
+    d->filename = g_strdup(filename);
+    g_task_set_task_data(task, d, png_data_free);
+    g_task_run_in_thread(task, frame_save_thread);
+}
+
+void b_image_save_to_png(const BImage * f, char *filename)
+{
+    FILE *fp = fopen(filename, "wb");
+    png_structp png_ptr = NULL;
+    png_infop info_ptr = NULL;
+    size_t x, y;
+    png_bytepp row_pointers;
+
+    int image_width = f->ncol;
+    int image_height = f->nrow;
+    guint16 *cam_data = f->data;
+
+    png_ptr =
+	png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (png_ptr == NULL) {
+	return;
+    }
+
+    info_ptr = png_create_info_struct(png_ptr);
+    if (info_ptr == NULL) {
+	png_destroy_write_struct(&png_ptr, NULL);
+	return;
+    }
+
+    if (setjmp(png_jmpbuf(png_ptr))) {
+	png_destroy_write_struct(&png_ptr, &info_ptr);
+	return;
+    }
+
+    png_set_IHDR(png_ptr, info_ptr, image_width, image_height,
+		 16,		/* TODO: use 8 bit if appropriate */
+		 PNG_COLOR_TYPE_GRAY,
+		 PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
+		 PNG_FILTER_TYPE_DEFAULT);
+
+    row_pointers =
+	(png_bytepp) png_malloc(png_ptr,
+				image_height * sizeof(png_bytepp));
+    int i;
+    for (i = 0; i < image_height; i++)
+	row_pointers[i] = NULL;
+
+    for (i = 0; i < image_height; i++)
+	row_pointers[i] = png_malloc(png_ptr, image_width * 2);
+
+    for (y = 0; y < image_height; ++y) {
+	png_bytep row = row_pointers[y];
+	for (x = 0; x < image_width; ++x) {
+	    guint16 color = cam_data[x + y * image_width];
+
+	    *row++ = (png_byte) (color >> 8);
+	    *row++ = (png_byte) (color & 0xFF);
+	}
+    }
+
+    png_init_io(png_ptr, fp);
+    png_set_rows(png_ptr, info_ptr, row_pointers);
+    png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
+
+    for (y = 0; y < image_height; y++) {
+	png_free(png_ptr, row_pointers[y]);
+    }
+    png_free(png_ptr, row_pointers);
+    png_destroy_write_struct(&png_ptr, &info_ptr);
+    fclose(fp);
 }
