@@ -71,6 +71,39 @@ static GActionEntry app_entries[] = {
   {"quit", quit_activated, NULL, NULL, NULL},
 };
 
+static GtkListStore *cam_list;
+
+static void on_descr_edited (GtkCellRendererText *renderer,
+               char                *path,
+               char                *new_text,
+               gpointer             user_data)
+{
+  /* retrieve camera ID from list */
+  GtkTreePath *treepath = gtk_tree_path_new_from_string (path);
+  GtkTreeIter iter;
+  gtk_tree_model_get_iter (GTK_TREE_MODEL (cam_list),
+                           &iter,
+                           treepath);
+
+  gchar *dev_id;
+  gtk_tree_model_get (GTK_TREE_MODEL (cam_list),
+                      &iter,
+                      1,
+                      &dev_id,
+                      -1);
+
+  const gchar *config_dir = g_get_user_config_dir ();
+  gchar *app_path = g_build_path("/",config_dir,"b-cam-viewer",NULL);
+  g_mkdir_with_parents(app_path,0755);
+  gchar *dev_path = g_build_path("/",app_path,dev_id,NULL);
+  FILE *f = fopen(dev_path,"w");
+  fwrite(new_text,MIN(64,strlen(new_text)),1,f);
+  fclose(f);
+
+  /* set new name in liststore */
+  gtk_list_store_set(cam_list,&iter,2,new_text,-1);
+}
+
 static void
 b_cam_viewer_app_startup (GApplication * application)
 {
@@ -90,23 +123,43 @@ b_cam_viewer_app_startup (GApplication * application)
     g_application_quit(G_APPLICATION(app));
   }
 
-  GtkListStore *list = gtk_list_store_new(3, G_TYPE_INT, G_TYPE_STRING, G_TYPE_STRING);
+  const gchar *config_dir = g_get_user_config_dir ();
+  gchar *app_path = g_build_path("/",config_dir,"b-cam-viewer",NULL);
+  g_mkdir_with_parents(app_path,S_IRUSR | S_IWUSR | S_IXUSR);
+
+  cam_list = gtk_list_store_new(3, G_TYPE_INT, G_TYPE_STRING, G_TYPE_STRING);
   GtkTreeIter iter;
   for(i=0;i<n_dev;i++) {
-    gtk_list_store_append (list, &iter);
-    gtk_list_store_set (list, &iter,
+    gtk_list_store_append (cam_list, &iter);
+    const gchar *dev_id = arv_get_device_id(i);
+
+    gchar *dev_path = g_build_path("/",app_path,dev_id,NULL);
+    gchar dev_descr[64] = "";
+    if(g_file_test(dev_path,G_FILE_TEST_EXISTS)) {
+      FILE *f = fopen(dev_path,"r");
+      fread(dev_descr,64,1,f);
+      fclose(f);
+    }
+
+    gtk_list_store_set (cam_list, &iter,
                           0, i,
                           1, arv_get_device_id(i),
-                          2, "Untitled",
+                          2, dev_descr,
                           -1);
   }
 
-  GtkWidget *tv = gtk_tree_view_new_with_model(GTK_TREE_MODEL(list));
+  GtkWidget *tv = gtk_tree_view_new_with_model(GTK_TREE_MODEL(cam_list));
 
   GtkCellRenderer *renderer;
   GtkTreeViewColumn *column;
   renderer = gtk_cell_renderer_text_new();
   column = gtk_tree_view_column_new_with_attributes("Camera ID", renderer, "text", 1, NULL);
+  gtk_tree_view_append_column (GTK_TREE_VIEW(tv), column);
+
+  GtkCellRenderer *name_renderer = gtk_cell_renderer_text_new();
+  g_object_set(name_renderer,"editable",TRUE,NULL);
+  g_signal_connect(name_renderer,"edited",G_CALLBACK(on_descr_edited),NULL);
+  column = gtk_tree_view_column_new_with_attributes("Description", name_renderer, "text", 2, NULL);
   gtk_tree_view_append_column (GTK_TREE_VIEW(tv), column);
 
   GtkWidget *d = gtk_dialog_new_with_buttons("Select camera", NULL, GTK_DIALOG_DESTROY_WITH_PARENT, "OK", GTK_RESPONSE_ACCEPT, "Quit", GTK_RESPONSE_REJECT, NULL);
@@ -126,7 +179,7 @@ b_cam_viewer_app_startup (GApplication * application)
     return;
   }
 
-  GtkTreeModel *model = GTK_TREE_MODEL(list);
+  GtkTreeModel *model = GTK_TREE_MODEL(cam_list);
   gchar *name;
 
   if(gtk_tree_selection_get_selected (selection, &model, &iter)) {
