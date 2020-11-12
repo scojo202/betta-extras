@@ -64,7 +64,7 @@ on_expo_changed(GtkSpinButton *sb, gpointer user_data)
 {
   double val = gtk_spin_button_get_value(sb);
   BCameraSettingsGrid *g = B_CAMERA_SETTINGS_GRID(user_data);
-  arv_camera_set_exposure_time(g->cam,val);
+  arv_camera_set_exposure_time(g->cam,val,NULL);
 }
 
 static void
@@ -72,7 +72,7 @@ on_fr_changed(GtkSpinButton *sb, gpointer user_data)
 {
   double val = gtk_spin_button_get_value(sb);
   BCameraSettingsGrid *g = B_CAMERA_SETTINGS_GRID(user_data);
-  arv_camera_set_frame_rate(g->cam,val);
+  arv_camera_set_frame_rate(g->cam,val,NULL);
 }
 
 static void
@@ -82,17 +82,17 @@ on_ext_trigger_toggled(GtkToggleButton *tb, gpointer user_data)
 
   BCameraSettingsGrid *g = B_CAMERA_SETTINGS_GRID(user_data);
   if (a) {
-    arv_camera_stop_acquisition(g->cam);
-    arv_camera_set_trigger_source(g->cam,"Line1");
-    arv_camera_set_trigger(g->cam,"Line1");
-    arv_camera_start_acquisition(g->cam);
+    arv_camera_stop_acquisition(g->cam,NULL);
+    arv_camera_set_trigger_source(g->cam,"Line1",NULL);
+    arv_camera_set_trigger(g->cam,"Line1",NULL);
+    arv_camera_start_acquisition(g->cam,NULL);
   }
   else {
-    arv_camera_stop_acquisition(g->cam);
-    arv_camera_set_trigger_source(g->cam,"Freerun");
-    arv_camera_set_trigger(g->cam,"Freerun");
-    arv_camera_set_frame_rate (g->cam, 5.0);
-    arv_camera_start_acquisition(g->cam);
+    arv_camera_stop_acquisition(g->cam,NULL);
+    arv_camera_set_trigger_source(g->cam,"Freerun",NULL);
+    arv_camera_set_trigger(g->cam,"Freerun",NULL);
+    arv_camera_set_frame_rate (g->cam, 5.0,NULL);
+    arv_camera_start_acquisition(g->cam,NULL);
   }
 }
 
@@ -103,7 +103,7 @@ on_set_region_clicked (GtkButton *b,
   BCameraSettingsGrid *g = B_CAMERA_SETTINGS_GRID(user_data);
   
   gint swidth, sheight;
-  arv_camera_get_sensor_size(g->cam, &swidth, &sheight);
+  arv_camera_get_sensor_size(g->cam, &swidth, &sheight,NULL);
   
   int active_x0;
   int active_y0;
@@ -115,13 +115,13 @@ on_set_region_clicked (GtkButton *b,
   active_width = MIN(active_width,swidth-active_x0);
   active_height = MIN(active_height,sheight-active_y0);
 
-  arv_camera_stop_acquisition(g->cam);
+  arv_camera_stop_acquisition(g->cam,NULL);
 
-  arv_camera_set_region (g->cam, active_x0, active_y0, active_width, active_height);
+  arv_camera_set_region (g->cam, active_x0, active_y0, active_width, active_height,NULL);
 
   b_arv_source_create_stream(g->source);
 
-  arv_camera_start_acquisition(g->cam);
+  arv_camera_start_acquisition(g->cam,NULL);
 }
 
 static void
@@ -131,15 +131,15 @@ on_full_region_clicked (GtkButton *b,
   BCameraSettingsGrid *g = B_CAMERA_SETTINGS_GRID(user_data);
 
   gint swidth, sheight;
-  arv_camera_get_sensor_size(g->cam, &swidth, &sheight);
+  arv_camera_get_sensor_size(g->cam, &swidth, &sheight,NULL);
 
-  arv_camera_stop_acquisition(g->cam);
+  arv_camera_stop_acquisition(g->cam,NULL);
 
-  arv_camera_set_region (g->cam, 0, 0, swidth, sheight);
+  arv_camera_set_region (g->cam, 0, 0, swidth, sheight,NULL);
 
   b_arv_source_create_stream(g->source);
 
-  arv_camera_start_acquisition(g->cam);
+  arv_camera_start_acquisition(g->cam,NULL);
 }
 
 static void
@@ -158,9 +158,9 @@ void b_camera_settings_grid_set_camera(BCameraSettingsGrid *g, ArvCamera *cam)
 
   /* find exposure time limits and current exposure time */
   double emin,emax;
-  arv_camera_get_exposure_time_bounds(g->cam,&emin,&emax);
+  arv_camera_get_exposure_time_bounds(g->cam,&emin,&emax,NULL);
 
-  double e = arv_camera_get_exposure_time(g->cam);
+  double e = arv_camera_get_exposure_time(g->cam,NULL);
   /* emax is typically something ridiculous -- default to 1 s */
   /* TODO: use log scale for exposure time */
   double step = (1e6-emin)/100;
@@ -170,15 +170,15 @@ void b_camera_settings_grid_set_camera(BCameraSettingsGrid *g, ArvCamera *cam)
   g->expo_handler = g_signal_connect(g->exposure_sb,"value-changed",G_CALLBACK(on_expo_changed),g);
 
   /* find frame rate limits and current frame rate */
-  arv_camera_get_frame_rate_bounds(g->cam,&emin,&emax);
-  e = arv_camera_get_frame_rate(g->cam);
+  arv_camera_get_frame_rate_bounds(g->cam,&emin,&emax,NULL);
+  e = arv_camera_get_frame_rate(g->cam,NULL);
   step = (emax-emin)/100;
   adj = gtk_spin_button_get_adjustment(g->frame_rate_sb);
   gtk_adjustment_configure(adj,e,emin,emax,step,step*10,step*10);
   g->fr_handler = g_signal_connect(g->frame_rate_sb,"value-changed",G_CALLBACK(on_fr_changed),g);
 
   /* trigger source */
-  const gchar *source = arv_camera_get_trigger_source(g->cam);
+  const gchar *source = arv_camera_get_trigger_source(g->cam,NULL);
   if(!strcmp(source,"Freerun"))
     gtk_toggle_button_set_active(g->external_trigger_button,FALSE);
   else
@@ -188,9 +188,9 @@ void b_camera_settings_grid_set_camera(BCameraSettingsGrid *g, ArvCamera *cam)
   
   /* set values and limits for region adjustments */
   gint swidth, sheight;
-  arv_camera_get_sensor_size(g->cam, &swidth, &sheight);
+  arv_camera_get_sensor_size(g->cam, &swidth, &sheight,NULL);
   gint x,y,width,height;
-  arv_camera_get_region(g->cam,&x,&y,&width,&height);
+  arv_camera_get_region(g->cam,&x,&y,&width,&height,NULL);
   gtk_adjustment_configure(g->x_adjustment,x,0,swidth,1,10,0);
   gtk_adjustment_configure(g->y_adjustment,y,0,sheight,1,10,0);
   gtk_adjustment_configure(g->width_adjustment,width,1,swidth,1,10,0);
@@ -234,7 +234,7 @@ gboolean b_camera_settings_grid_get_region_modified(BCameraSettingsGrid *g)
   int active_height = (int) gtk_adjustment_get_value(g->height_adjustment);
 
   gint x,y,width,height;
-  arv_camera_get_region(g->cam,&x,&y,&width,&height);
+  arv_camera_get_region(g->cam,&x,&y,&width,&height,NULL);
 
   return ((x!=active_x0) || (y!=active_y0) || (width!=active_width) || (height!=active_height));
 }

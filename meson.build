@@ -7,7 +7,7 @@ libgio_dep = dependency('gio-2.0', version: '>= 2.52')
 libgobj_dep = dependency('gobject-2.0', version: '>= 2.52')
 libbetta_dep = dependency('libbetta-0.2', version: '>= 0.1.3')
 fftw_dep = dependency('fftw3', version: '>=3.2')
-aravis_dep = dependency('aravis-0.6', required : false)
+aravis_dep = dependency('aravis-0.8', required : false)
 png_dep = dependency('libpng')
 
 comp = meson.get_compiler('c')

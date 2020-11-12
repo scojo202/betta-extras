@@ -267,14 +267,14 @@ void b_arv_source_create_stream (BArvSource *s)
     arv_stream_set_emit_signals(s->stream,FALSE);
   g_clear_object(&s->stream);
   /* Create a new stream object */
-  s->stream = arv_camera_create_stream (s->camera, NULL, NULL);
+  s->stream = arv_camera_create_stream (s->camera, NULL, NULL,NULL);
   if (s->stream != NULL) {
     g_object_set (s->stream,
                   "packet-timeout", 20 * 1000,
                   "frame-retention", 100 * 1000,
                   NULL);
     /* Push 10 buffers in the stream input buffer queue */
-    payload = arv_camera_get_payload (s->camera);
+    payload = arv_camera_get_payload (s->camera,NULL);
     for (i = 0; i < 10; i++)
       arv_stream_push_buffer (s->stream, arv_buffer_new (payload, NULL));
 

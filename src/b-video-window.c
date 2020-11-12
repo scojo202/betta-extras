@@ -903,10 +903,10 @@ change_capture_state (GSimpleAction *action,
   BVideoWindow *ivw = B_VIDEO_WINDOW(user_data);
   gboolean capture = g_variant_get_boolean (state);
   if(capture) {
-    arv_camera_start_acquisition(ivw->camera);
+    arv_camera_start_acquisition(ivw->camera,NULL);
   }
   else {
-    arv_camera_stop_acquisition(ivw->camera);
+    arv_camera_stop_acquisition(ivw->camera,NULL);
   }
 
   g_simple_action_set_state (action, state);

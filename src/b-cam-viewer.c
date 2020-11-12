@@ -195,19 +195,19 @@ b_cam_viewer_app_startup (GApplication * application)
   app_settings = g_settings_new ("com.github.scojo202.bcamviewer");
   int mtu = g_settings_get_int(app_settings,"packet-size");
 
-  camera = arv_camera_new(name);
+  camera = arv_camera_new(name,NULL);
 
   if(camera!=NULL) {
     //fr = arv_camera_get_frame_rate(camera);
 
-    arv_camera_set_pixel_format(camera,ARV_PIXEL_FORMAT_MONO_12);
+    arv_camera_set_pixel_format(camera,ARV_PIXEL_FORMAT_MONO_12, NULL);
 
     gint width, height;
-    arv_camera_get_sensor_size(camera, &width, &height);
+    arv_camera_get_sensor_size(camera, &width, &height,NULL);
 
     //arv_camera_set_region (camera, 0, 0, 400, 300);
 
-    arv_camera_gv_set_packet_size (camera, mtu);
+    arv_camera_gv_set_packet_size (camera, mtu, NULL);
     //guint mps = arv_camera_gv_auto_packet_size(camera);
     //g_message("max packet size %u",mps);
   }
@@ -221,7 +221,7 @@ static void
 b_cam_viewer_app_shutdown (GApplication * application)
 {
   if(camera)
-    arv_camera_stop_acquisition (camera);
+    arv_camera_stop_acquisition (camera,NULL);
   arv_shutdown();
 
   G_APPLICATION_CLASS (b_cam_viewer_app_parent_class)->shutdown
@@ -249,11 +249,11 @@ b_cam_viewer_app_activate (GApplication * appl)
 
   image = g_object_new(B_TYPE_ARV_SOURCE,"camera", camera, NULL);
 
-  arv_camera_set_frame_rate (camera, 10.0);
-  arv_camera_set_acquisition_mode(camera, ARV_ACQUISITION_MODE_CONTINUOUS);
+  arv_camera_set_frame_rate (camera, 10.0, NULL);
+  arv_camera_set_acquisition_mode(camera, ARV_ACQUISITION_MODE_CONTINUOUS, NULL);
 
   /* Start the video stream */
-  arv_camera_start_acquisition (camera);
+  arv_camera_start_acquisition (camera,NULL);
 
   /* should quit if this window is closed */
   g_signal_connect (G_OBJECT (video_window), "destroy", G_CALLBACK(on_video_window_destroy), NULL);

@@ -63,7 +63,7 @@ pkgg = import('pkgconfig')
 pkg_reqs = [ 'glib-2.0', 'gobject-2.0', 'gio-2.0', 'libbetta-0.2', 'fftw3']
 
 if aravis_dep.found()
-  pkg_reqs += ['aravis-0.6']
+  pkg_reqs += ['aravis-0.8']
 endif
 
 pkgg.generate(
