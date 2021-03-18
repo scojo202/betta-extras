@@ -81,8 +81,6 @@ struct _BVideoWindow
 
 G_DEFINE_TYPE (BVideoWindow, b_video_window, GTK_TYPE_APPLICATION_WINDOW)
 
-static GObjectClass *parent_class = NULL;
-
 /*
 
 detect saturation
@@ -120,6 +118,7 @@ window_close_activate (GSimpleAction *action,
                  gpointer       user_data)
 {
   gtk_window_close(user_data);
+  gtk_widget_destroy(user_data);
 }
 
 static void
@@ -169,7 +168,6 @@ void replace_surf(BVideoWindow *widget) {
 
   if(surf_height != image_height || surf_width != image_width) {
     cairo_surface_destroy(widget->surf);
-    g_message("replace surf, %d %d", image_width, image_height);
     widget->surf = cairo_image_surface_create ( CAIRO_FORMAT_RGB24,
                                                          image_width,
                                                          image_height);
@@ -195,7 +193,7 @@ void replace_surf(BVideoWindow *widget) {
   GTimer *t = g_timer_new();
 #endif
 
-  if(!strcmp(scaling,"full")) {
+  if(scaling != NULL && !strcmp(scaling,"full")) {
     dmax=4095;
   }
 
@@ -209,7 +207,7 @@ void replace_surf(BVideoWindow *widget) {
   else
     idmax = 0.0;
 
-  if(!strcmp(pal,"gray")) {
+  if(pal != NULL && !strcmp(pal,"gray")) {
       unsigned char lut[dmax];
       lut[0] = 0;
       for(i=1;i<=dmax;i++) {
@@ -222,7 +220,7 @@ void replace_surf(BVideoWindow *widget) {
         buffer[4*i+2]=lut[cam_data[i]];
       }
   }
-  else if (!strcmp(pal,"jet")) {
+  else if (pal != NULL && !strcmp(pal,"jet")) {
       /* create lookup tables here */
       guint32 lut[dmax];
       unsigned char *clut = (unsigned char *) lut;
@@ -233,7 +231,7 @@ void replace_surf(BVideoWindow *widget) {
         float d = logscale ? logf((float)i) : ((float) i);
         float q = d*idmax;
         guint32 u = b_color_map_get_map(widget->colormap,q);
-        UINT_TO_RGB(u,&clut[4*i+2],&clut[4*i+1],&clut[4*i])
+        UINT_TO_RGB(u,&clut[4*i+2],&clut[4*i+1],&clut[4*i]);
       }
       guint32 *ibuffer = (guint32*) buffer;
       for(i=0;i<surf_height*surf_width;i++) {
@@ -267,6 +265,7 @@ frame_ready(BData *data, gpointer user_data)
 {
   BVideoWindow *widget = B_VIDEO_WINDOW(user_data);
   g_assert(widget!=NULL);
+
   //g_return_val_if_fail(widget->frame_rate_label!=NULL,FALSE);
   b_rate_label_update(widget->frame_rate_label);
   if(!widget->draw_idle) {
@@ -507,14 +506,14 @@ void video_widget_finalize(GObject *obj)
 {
   BVideoWindow *widget = B_VIDEO_WINDOW(obj);
 
-  g_message("video widget finalize");
-
   g_object_unref(widget->scrolled_window);
   g_object_unref(widget->draw_area);
   //frame_free(widget->frame);
+  //
+  GObjectClass *parent = (GObjectClass *) b_video_window_parent_class;
 
-  if (parent_class->finalize)
-    parent_class->finalize (obj);
+  if (parent->finalize)
+    parent->finalize (obj);
 }
 
 static gboolean
@@ -600,6 +599,69 @@ motion_notify (GtkWidget *widget, GdkEvent  *event, gpointer user_data)
 }
 
 static gboolean
+scroll_event (GtkWidget * widget, GdkEventScroll * ev, gpointer user_data)
+{
+  BVideoWindow *self = B_VIDEO_WINDOW(user_data);
+
+  gboolean scroll = FALSE;
+  gboolean direction;
+  if (ev->direction == GDK_SCROLL_UP)
+    {
+      scroll = TRUE;
+      direction = TRUE;
+    }
+  else if (ev->direction == GDK_SCROLL_DOWN)
+    {
+      scroll = TRUE;
+      direction = FALSE;
+    }
+  if (!scroll)
+    return FALSE;
+
+  if(ev->state & GDK_SHIFT_MASK) {
+    if(self->surf==NULL) return FALSE;
+    const gchar *zoom_style = gtk_combo_box_get_active_id(GTK_COMBO_BOX(self->zoom_style_picker));
+    if(!strcmp(zoom_style,"with-window")) {
+      return FALSE;
+    }
+    double currzoom=gtk_spin_button_get_value(self->zoom_spinbutton);
+    double scale = direction ? 0.8 : 1.0 / 0.8;
+    gtk_spin_button_set_value(self->zoom_spinbutton,scale*currzoom);
+
+    int surf_height = cairo_image_surface_get_height(self->surf);
+    int surf_width = cairo_image_surface_get_width(self->surf);
+
+    self->x = lrint(ev->x/self->scale);
+    self->y = lrint(ev->y/self->scale);
+
+    int x = lrint(ev->x/self->scale);
+    int y = lrint(ev->y/self->scale);
+
+    GtkAdjustment *hadj = gtk_scrolled_window_get_hadjustment(self->scrolled_window);
+    GtkAdjustment *vadj = gtk_scrolled_window_get_vadjustment(self->scrolled_window);
+
+    double hval = gtk_adjustment_get_value(hadj);
+    double vval = gtk_adjustment_get_value(vadj);
+
+    GtkWidget *scroll = GTK_WIDGET(self->scrolled_window);
+    int xcenter = gtk_widget_get_allocated_width(scroll)/2 + hval;
+    int ycenter = gtk_widget_get_allocated_height(scroll)/2 + vval;
+
+    /* try to center viewport on this point */
+    int dx = x - xcenter;
+    if(dx+hval>0 && dx+hval<surf_width) {
+      gtk_adjustment_set_value(hadj,dx+hval);
+    }
+    int dy = y - ycenter;
+    if(dy+vval>0 && dy+vval<surf_height) {
+      gtk_adjustment_set_value(vadj,dy+vval);
+    }
+  }
+
+  return FALSE;
+}
+
+static gboolean
 button_press (GtkWidget *widget, GdkEvent  *event, gpointer user_data)
 {
   GdkEventButton *ev = (GdkEventButton *) event;
@@ -609,6 +671,64 @@ button_press (GtkWidget *widget, GdkEvent  *event, gpointer user_data)
   self->y = lrint(ev->y/self->scale);
   int surf_height = cairo_image_surface_get_height(self->surf);
   int surf_width = cairo_image_surface_get_width(self->surf);
+
+  /* center on point with click plus shift */
+  if(ev->button == 1 && ev->state & GDK_SHIFT_MASK) {
+    if(self->surf==NULL) return FALSE;
+    const gchar *zoom_style = gtk_combo_box_get_active_id(GTK_COMBO_BOX(self->zoom_style_picker));
+    if(!strcmp(zoom_style,"with-window")) {
+      return FALSE;
+    }
+
+    GtkAdjustment *hadj = gtk_scrolled_window_get_hadjustment(self->scrolled_window);
+    GtkAdjustment *vadj = gtk_scrolled_window_get_vadjustment(self->scrolled_window);
+
+    double hval = gtk_adjustment_get_value(hadj);
+    double vval = gtk_adjustment_get_value(vadj);
+
+    GtkWidget *scroll = GTK_WIDGET(self->scrolled_window);
+    int xcenter = gtk_widget_get_allocated_width(scroll)/2 + hval;
+    int ycenter = gtk_widget_get_allocated_height(scroll)/2 + vval;
+
+    /* try to center viewport on this point */
+    int dx = ev->x - xcenter;
+    if(dx+hval>0 && dx+hval<surf_width) {
+      gtk_adjustment_set_value(hadj,dx+hval);
+    }
+    int dy = ev->y - ycenter;
+    if(dy+vval>0 && dy+vval<surf_height) {
+      gtk_adjustment_set_value(vadj,dy+vval);
+    }
+  }
+
+  /* zoom on point with click plus control */
+  if(ev->button == 1 && ev->state & GDK_CONTROL_MASK) {
+    if(self->surf==NULL) return FALSE;
+    const gchar *zoom_style = gtk_combo_box_get_active_id(GTK_COMBO_BOX(self->zoom_style_picker));
+    if(!strcmp(zoom_style,"with-window")) {
+      return FALSE;
+    }
+
+    GtkAdjustment *hadj = gtk_scrolled_window_get_hadjustment(self->scrolled_window);
+    GtkAdjustment *vadj = gtk_scrolled_window_get_vadjustment(self->scrolled_window);
+
+    double hval = gtk_adjustment_get_value(hadj);
+    double vval = gtk_adjustment_get_value(vadj);
+
+    GtkWidget *scroll = GTK_WIDGET(self->scrolled_window);
+    int xcenter = gtk_widget_get_allocated_width(scroll)/2 + hval;
+    int ycenter = gtk_widget_get_allocated_height(scroll)/2 + vval;
+
+    /* try to center viewport on this point */
+    int dx = ev->x - xcenter;
+    if(dx+hval>0 && dx+hval<surf_width) {
+      gtk_adjustment_set_value(hadj,dx+hval);
+    }
+    int dy = ev->y - ycenter;
+    if(dy+vval>0 && dy+vval<surf_height) {
+      gtk_adjustment_set_value(vadj,dy+vval);
+    }
+  }
 
   if(self->setting_marker) {
     if(self->x<surf_width && self->y<surf_height && self->x>0 && self->y>0) {
@@ -763,7 +883,10 @@ static
 void video_widget_destroy (GtkWidget *object)
 {
   BVideoWindow *widget = B_VIDEO_WINDOW (object);
-  cairo_surface_destroy(widget->surf);
+  if(widget->surf!=NULL) {
+    cairo_surface_destroy(widget->surf);
+    widget->surf = NULL;
+  }
   if(widget->image) {
     g_signal_handlers_disconnect_by_data(widget->image, widget);
     g_object_unref(widget->image);
@@ -771,12 +894,18 @@ void video_widget_destroy (GtkWidget *object)
   widget->run=FALSE;
   if(widget->draw_idle)
     g_source_remove(widget->draw_idle);
+
+  GtkWidgetClass *parent = (GtkWidgetClass *) b_video_window_parent_class;
+  parent->destroy(GTK_WIDGET(object));
 }
 
 static void
 video_widget_constructed (GObject *obj)
 {
   BVideoWindow *w = B_VIDEO_WINDOW(obj);
+
+  GObjectClass *parent = (GObjectClass *) b_video_window_parent_class;
+  parent->constructed(obj);
 
   if(w->image != NULL) {
     b_video_window_on(w);
@@ -787,9 +916,6 @@ static void
 b_video_window_class_init (BVideoWindowClass *klass)
 {
   GObjectClass *object_class = (GObjectClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
-
   GtkWidgetClass *widget_class = (GtkWidgetClass *) klass;
 
   widget_class->destroy = video_widget_destroy;
@@ -799,7 +925,7 @@ b_video_window_class_init (BVideoWindowClass *klass)
   object_class->finalize = video_widget_finalize;
   object_class->constructed = video_widget_constructed;
 
-  gtk_widget_class_set_template_from_resource(widget_class, "/com/github/scojo202/betta/b-video-window.ui");
+  gtk_widget_class_set_template_from_resource(widget_class, "/com/github/scojo202/bcamviewer/b-video-window.ui");
   gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS (klass), BVideoWindow, video_box);
   gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS (klass), BVideoWindow, video_window_box1);
   gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS (klass), BVideoWindow, zoom_style_picker);
@@ -943,18 +1069,23 @@ static GActionEntry win_entries[] = {
 };
 
 static void
+on_zoom_scale_changed(GtkSpinButton *sb,
+                      gpointer       user_data)
+{
+  BVideoWindow *ivw = B_VIDEO_WINDOW(user_data);
+
+  ivw->scale = gtk_spin_button_get_value(sb)/100;
+
+  gtk_widget_queue_draw(GTK_WIDGET(ivw->draw_area));
+}
+
+static void
 b_video_window_init (BVideoWindow *self)
 {
   gtk_widget_init_template (GTK_WIDGET (self));
 
   self->colormap = b_color_map_new();
   b_color_map_set_jet(self->colormap);
-
-  self->header = GTK_HEADER_BAR(gtk_header_bar_new());
-  gtk_header_bar_set_title(self->header,"Camera viewer");
-  gtk_header_bar_set_show_close_button(self->header,TRUE);
-
-  //gtk_window_set_titlebar(GTK_WINDOW(self),GTK_WIDGET(self->header));
 
   self->settings_grid = g_object_new(B_TYPE_CAMERA_SETTINGS_GRID,NULL);
   gtk_box_pack_end(self->video_window_box1,GTK_WIDGET(self->settings_grid),FALSE,TRUE,0);
@@ -965,11 +1096,14 @@ b_video_window_init (BVideoWindow *self)
   self->draw_area = GTK_DRAWING_AREA(gtk_drawing_area_new());
   g_object_ref(self->draw_area); /* because we will sometimes remove it */
 
-  gtk_widget_add_events(GTK_WIDGET(self->draw_area),GDK_POINTER_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
+  gtk_widget_add_events(GTK_WIDGET(self->draw_area),GDK_POINTER_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_SCROLL_MASK | GDK_BUTTON_RELEASE_MASK);
 
   g_signal_connect(self->draw_area, "motion-notify-event", G_CALLBACK(motion_notify), self);
   g_signal_connect(self->draw_area, "button-press-event", G_CALLBACK(button_press), self);
   g_signal_connect(self->draw_area, "button-release-event", G_CALLBACK(button_release), self);
+  g_signal_connect(self->draw_area, "scroll-event", G_CALLBACK(scroll_event), self);
+
+  g_signal_connect(self->zoom_spinbutton, "value-changed", G_CALLBACK(on_zoom_scale_changed), self);
 
   self->viewport = GTK_VIEWPORT(gtk_viewport_new(NULL,NULL));
 
@@ -988,9 +1122,8 @@ b_video_window_init (BVideoWindow *self)
     self->marker_y[i] = -1;
   }
 
-  gtk_window_set_default_size(GTK_WINDOW(self), 800,600);
-
   g_action_map_add_action_entries (G_ACTION_MAP (self), win_entries, G_N_ELEMENTS (win_entries), self);
+
   g_action_map_add_action (G_ACTION_MAP (self), (GAction *) g_property_action_new("logscale", self, "logscale"));
   //g_action_map_add_action (G_ACTION_MAP (self), (GAction *) g_property_action_new("colormapname", self, "colormapname"));
 

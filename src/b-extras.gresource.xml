@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
-  <gresource prefix="/com/github/scojo202/betta/">
+  <gresource prefix="com/github/scojo202/bcamviewer">
+    <file preprocess="xml-stripblanks">gtk/menus.ui</file>
     <file preprocess="xml-stripblanks">b-camera-settings-grid.ui</file>
     <file preprocess="xml-stripblanks">b-video-window.ui</file>
   </gresource>
